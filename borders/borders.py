@@ -35,9 +35,9 @@ def divide_bbox(bbox):
     # __MAX_BBOX_X = 20000
     # __MAX_BBOX_Y = 45000
     # __PRECISION = 10
-    __MAX_BBOX_X = 0.03 * 1000000
-    __MAX_BBOX_Y = 0.04 * 1000000
     __PRECISION = 1000000
+    __MAX_BBOX_X = int(0.03 * __PRECISION)
+    __MAX_BBOX_Y = int(0.04 * __PRECISION)
     return [
         (x / __PRECISION,
          y / __PRECISION,
@@ -63,7 +63,8 @@ def fetch_from_emuia(bbox):
                             "WIDTH": "16000",
                             "HEIGHT": "16000",
                             "BBOX": "{0},{1},{2},{3}".format(*bbox)
-                        })
+                        },
+                        verify=False)
     return kml_to_shapely(resp.text)
 
 
