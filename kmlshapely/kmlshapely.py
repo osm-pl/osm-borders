@@ -1,6 +1,6 @@
 import logging
 from typing import List
-from xml.etree.ElementTree import ElementTree, Element
+from xml.etree.ElementTree import Element, fromstring
 
 from bs4 import BeautifulSoup
 from shapely.geometry.base import BaseGeometry
@@ -23,8 +23,8 @@ def kml_to_shapely(data: bytes) -> Borders:
     :rtype: Borders
     :param data:
     """
-    tree = ElementTree()
-    tree.parse(data)
+
+    tree = fromstring(data)
     rv = []
     for placemark in tree.findall(".//" + ns + "Placemark"):
         name = placemark.findtext(ns + "name")

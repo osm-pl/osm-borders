@@ -5729,7 +5729,8 @@ class OverpyShapely(unittest.TestCase):
 }
 """))
         with open("../example.kml") as f:
-            obj = kml_to_shapely(f)
+            obj = kml_to_shapely(f.read())
             ret = borders.process(OverToShape(res).get_relation_shape(), obj)
         with open("../out.osm", "wb+") as f:
             f.write(ret)
+
