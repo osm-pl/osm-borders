@@ -15,7 +15,7 @@ def make_response(ret, code):
 
 @app.route("/osm/granice/<terc>.osm", methods=["GET", ])
 def get_borders(terc):
-    make_response(borders.borders.get_adm_border(terc), 200)
+    make_response(borders.borders.get_borders(terc), 200)
 
 
 @app.errorhandler(Exception)
@@ -36,4 +36,4 @@ if __name__ == '__main__':
                                    ADMINS, 'OSM Rest-Server Failed')
         mail_handler.setLevel(logging.INFO)
         app.logger.addHandler(mail_handler)
-    app.run(host='0.0.0.0', port=5001, debug=False)
+    app.run(host='0.0.0.0', port=5002, debug=False)
