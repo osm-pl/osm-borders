@@ -15,7 +15,9 @@ def make_response(ret, code):
 
 @app.route("/osm/granice/<terc>.osm", methods=["GET", ])
 def get_borders(terc):
-    return make_response(borders.borders.get_borders(terc), 200)
+    resp = make_response(borders.borders.get_borders(terc), 200)
+    resp.headers['Content-Disposition'] = 'attachment; filename={0}.osm'.format(terc)
+    return resp
 
 
 @app.errorhandler(Exception)
