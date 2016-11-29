@@ -1,3 +1,4 @@
+import cachetools.func
 import itertools
 import math
 import time
@@ -13,7 +14,7 @@ from kmlshapely.kmlshapely import Border
 from kmlshapely.kmlshapely import kml_to_shapely
 from overpyshapely.overpyshapely import OverToShape
 
-
+@cachetools.func.ttl_cache(maxsize=128, ttl=600)
 def get_adm_border(terc: str) -> shapely.geometry.Polygon:
     api = Overpass()
     result = api.query("""
@@ -48,6 +49,7 @@ def divide_bbox(bbox):
         ]
 
 
+@cachetools.func.ttl_cache(maxsize=128, ttl=600)
 def fetch_from_emuia(bbox):
     resp = requests.get("http://emuia1.gugik.gov.pl/wmsproxy/emuia/wms",
                         params={

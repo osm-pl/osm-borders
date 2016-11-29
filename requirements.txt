@@ -1,4 +1,5 @@
 bs4
+cachetools
 overpy
 Shapely
 beautifulsoup4
