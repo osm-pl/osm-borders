@@ -15,7 +15,7 @@ def make_response(ret, code):
 
 @app.route("/osm/granice/<terc>.osm", methods=["GET", ])
 def get_borders(terc):
-    make_response(borders.borders.get_borders(terc), 200)
+    return make_response(borders.borders.get_borders(terc), 200)
 
 
 @app.errorhandler(Exception)
