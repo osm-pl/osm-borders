@@ -18,17 +18,17 @@ class OverToShape(object):
     def get_node_shape(self, id: int = None) -> shapely.geometry.Point:
         if not id:
             id = self._default_id(self._result.node_ids)
-        return self._obj_to_shapely(self._result.get_node(id))
+        return self._node_to_shapely(self._result.get_node(id))
 
-    def get_way_shape(self, id: int = None) -> shapely.geometry.Point:
+    def get_way_shape(self, id: int = None) -> shapely.geometry.base.BaseGeometry:
         if not id:
             id = self._default_id(self._result.way_ids)
-        return self._obj_to_shapely(self._result.get_way(id))
+        return self._way_to_shapely(self._result.get_way(id))
 
     def get_relation_shape(self, id: int = None) -> shapely.geometry.Polygon:
         if not id:
             id = self._default_id(self._result.relation_ids)
-        return self._obj_to_shapely(self._result.get_relation(id))
+        return self._relation_to_shapely(self._result.get_relation(id))
 
     def _obj_to_shapely(self, obj: overpy.Element) -> shapely.geometry.base.BaseGeometry:
         if isinstance(obj, overpy.Node):
@@ -44,7 +44,7 @@ class OverToShape(object):
     def _node_to_shapely(self, obj: overpy.Node) -> shapely.geometry.Point:
         return shapely.geometry.Point([obj.lon, obj.lat])
 
-    def _way_to_shapely(self, obj: overpy.Way) -> shapely.geometry.LineString:
+    def _way_to_shapely(self, obj: overpy.Way) -> shapely.geometry.base.BaseGeometry:
         if obj.nodes[0].id == obj.nodes[-1].id:
             # closed way
             return shapely.geometry.Polygon([(x.lon, x.lat) for x in obj.get_nodes()])

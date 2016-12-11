@@ -3,7 +3,7 @@ import unittest
 
 import shapely.geometry
 
-import kmlshapely.kmlshapely
+import converters.kmlshapely
 
 logging.basicConfig(level=10)
 
@@ -11,7 +11,7 @@ class KmlShapelyTests(unittest.TestCase):
     def test1(self):
         with open("example.kml") as f:
             content = f.read()
-            obj = kmlshapely.kmlshapely.kml_to_shapely(content)
+            obj = converters.kmlshapely.kml_to_shapely(content)
             self.assertEqual("Krynki-Sobole (0028702)", obj[0].get_tag('name'))
             self.assertEqual("2010042", obj[0].get_tag('TERYT_JEDNOSTKI'))
             self.assertTrue(

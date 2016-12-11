@@ -1,6 +1,8 @@
-from borders.borders import get_borders
 import argparse
 import logging
+
+from borders.borders import get_borders
+
 
 def main():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter,
@@ -11,12 +13,12 @@ def main():
     parser.add_argument('--output', type=argparse.FileType('w+b'), default='result.osm',
                             help='output file with merged data (default: result.osm)')
 
-    parser.add_argument('gmina', nargs=1, help='county terc code')
+    parser.add_argument('terc', nargs=1, help='county terc code')
     args = parser.parse_args()
 
     logging.basicConfig(level=args.log_level)
 
-    args.output.write(get_borders(args.gmina[0]))
+    args.output.write(get_borders(args.terc[0]))
 
 if __name__ == '__main__':
     main()

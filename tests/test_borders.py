@@ -5,8 +5,8 @@ import unittest
 import overpy
 
 import borders.borders
-from kmlshapely.kmlshapely import kml_to_shapely
-from overpyshapely.overpyshapely import OverToShape
+from converters.kmlshapely import kml_to_shapely
+from converters.overpyshapely import OverToShape
 
 logging.basicConfig(level=10)
 

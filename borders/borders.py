@@ -1,18 +1,19 @@
-import cachetools.func
 import itertools
 import math
 import time
 import typing
 import xml.etree.ElementTree as ET
 
+import cachetools.func
 import requests
 import shapely.geometry
 import shapely.geometry
 from overpy import Overpass
 
-from kmlshapely.kmlshapely import Border
-from kmlshapely.kmlshapely import kml_to_shapely
-from overpyshapely.overpyshapely import OverToShape
+from converters.kmlshapely import Border
+from converters.kmlshapely import kml_to_shapely
+from converters.overpyshapely import OverToShape
+
 
 @cachetools.func.ttl_cache(maxsize=128, ttl=600)
 def get_adm_border(terc: str) -> shapely.geometry.Polygon:
@@ -104,7 +105,7 @@ def dump_relation(tree, border: Border, id_):
         ET.SubElement(rel, 'member', {'ref': str(way), 'role': 'inner', 'type': 'way'})
 
 
-def dump_ways(tree, border: Border, id_) -> typing.List[int]:
+def dump_ways(tree, border: Border, id_) -> typing.Tuple[typing.List[int], typing.List[int]]:
     outer = []
     inner = []
     geojson = shapely.geometry.mapping(border.border)
