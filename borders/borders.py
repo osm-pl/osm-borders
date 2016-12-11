@@ -10,7 +10,7 @@ import shapely.geometry
 import shapely.ops
 from overpy import Overpass
 
-from converters.kmlshapely import Border
+from converters.kmlshapely import Feature
 from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
 
@@ -109,7 +109,7 @@ def create_MLS(obj1, obj2):
     return shapely.geometry.MultiLineString(geoms)
 
 
-def split_by_common_ways(borders: typing.List[Border]) -> typing.List[Border]:
+def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
     for border in borders:
         for other in borders:
             if border == other:
@@ -120,7 +120,8 @@ def split_by_common_ways(borders: typing.List[Border]) -> typing.List[Border]:
             other.border = create_MLS(intersec, other.border.difference(intersec))
     return borders
 
-def dump_relation(tree, border: Border, id_):
+
+def dump_relation(tree, border: Feature, id_):
     rel = ET.SubElement(tree, "relation", {'id': str(next(id_))})
     (outer, inner) = dump_ways(tree, border, id_)
     for key, value in border.tags.items():
@@ -133,7 +134,7 @@ def dump_relation(tree, border: Border, id_):
         ET.SubElement(rel, 'member', {'ref': str(way), 'role': 'inner', 'type': 'way'})
 
 
-def dump_ways(tree, border: Border, id_) -> typing.Tuple[typing.List[int], typing.List[int]]:
+def dump_ways(tree, border: Feature, id_) -> typing.Tuple[typing.List[int], typing.List[int]]:
     outer = []
     inner = []
     geojson = shapely.geometry.mapping(border.border)

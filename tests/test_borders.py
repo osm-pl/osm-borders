@@ -6,7 +6,7 @@ import overpy
 import shapely.geometry
 
 import borders.borders
-import converters.border
+import converters.feature
 from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
 
@@ -26,7 +26,7 @@ class OverpyShapely(unittest.TestCase):
 
     def test_split_extra_point(self):
         # 2 boxes exactly the same with extra point along the line
-        border1 = converters.border.Border(
+        border1 = converters.feature.Feature(
             shapely.geometry.LineString(
                 [
                     (0, 0),
@@ -37,7 +37,7 @@ class OverpyShapely(unittest.TestCase):
                 ]
             )
         )
-        border2 = converters.border.Border(
+        border2 = converters.feature.Feature(
             shapely.geometry.LineString(
                 [
                     (0, 1),
@@ -54,7 +54,7 @@ class OverpyShapely(unittest.TestCase):
 
     def test_split_same_geo(self):
         # 2 boxes exactly the same
-        border1 = converters.border.Border(
+        border1 = converters.feature.Feature(
             shapely.geometry.LineString(
                 [
                     (0, 0),
@@ -65,7 +65,7 @@ class OverpyShapely(unittest.TestCase):
                 ]
             )
         )
-        border2 = converters.border.Border(
+        border2 = converters.feature.Feature(
             shapely.geometry.LineString(
                 [
                     (0, 0),
@@ -85,7 +85,7 @@ class OverpyShapely(unittest.TestCase):
         #   |       |       |
         # (0,0)---(1,0)---(2,0)
         # 2 small one
-        left = converters.border.Border(
+        left = converters.feature.Feature(
             shapely.geometry.LineString(
                 [
                     (0, 0),
@@ -96,7 +96,7 @@ class OverpyShapely(unittest.TestCase):
                 ]
             )
         )
-        right = converters.border.Border(
+        right = converters.feature.Feature(
             shapely.geometry.LineString(
                 [
                     (1, 1),
@@ -121,7 +121,7 @@ class OverpyShapely(unittest.TestCase):
         #   |       |
         # (0,0)---(1,0)
         # 2 small one - bottom and upper, and one outline
-        bottom = converters.border.Border(
+        bottom = converters.feature.Feature(
             shapely.geometry.LinearRing(
                 [
                     (0, 0),
@@ -131,7 +131,7 @@ class OverpyShapely(unittest.TestCase):
                 ]
             ))
 
-        upper = converters.border.Border(
+        upper = converters.feature.Feature(
             shapely.geometry.LinearRing(
                 [
                     (0, 1),
@@ -142,7 +142,7 @@ class OverpyShapely(unittest.TestCase):
                 ]
             ))
 
-        outline = converters.border.Border(
+        outline = converters.feature.Feature(
             shapely.geometry.LinearRing(
                 [
                     (0, 0),

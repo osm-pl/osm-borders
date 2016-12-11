@@ -1,7 +1,7 @@
 import shapely.geometry
 
 
-class Border:
+class Feature:
     def __init__(self, geometry: shapely.geometry.base.BaseGeometry):
         """
         :type geometry: shapely.geometry.base

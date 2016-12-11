@@ -7,13 +7,13 @@ from shapely.geometry.base import BaseGeometry
 from shapely.geometry.polygon import Polygon
 from shapely.ops import cascaded_union
 
-from .border import Border
+from .feature import Feature
 
 __log = logging.getLogger(__name__)
 
 ns = "{http://www.opengis.net/kml/2.2}"
 
-Borders = List[Border]
+Borders = List[Feature]
 Shapes = List[BaseGeometry]
 
 
@@ -39,7 +39,7 @@ def kml_to_shapely(data: str) -> Borders:
         polygon = geo.find(ns + "Polygon")
         outer = cascaded_union([ring_to_shape(x) for x in polygon.findall(ns + "outerBoundaryIs/" + ns + "LinearRing")])
         inner = cascaded_union([ring_to_shape(x) for x in polygon.findall(ns + "innerBoundaryIs/" + ns + "LinearRing")])
-        border = Border(outer.difference(inner))
+        border = Feature(outer.difference(inner))
         border.set_tag('name', name)
         for key, value in tags.items():
             border.set_tag(key, value)
