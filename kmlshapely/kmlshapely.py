@@ -17,7 +17,7 @@ Borders = List[Border]
 Shapes = List[BaseGeometry]
 
 
-def kml_to_shapely(data: bytes) -> Borders:
+def kml_to_shapely(data: str) -> Borders:
     """
 
     :rtype: Borders

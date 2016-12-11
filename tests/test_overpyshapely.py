@@ -6,7 +6,7 @@ import unittest
 import overpy
 import shapely.geometry
 
-import overpyshapely
+import overpyshapely.overpyshapely
 
 logging.basicConfig(level=10)
 
@@ -11631,7 +11631,7 @@ class OverpyShapely(unittest.TestCase):
 
     def test1(self):
         res = self.get_overpy_result()
-        os = overpyshapely.OverToShape(res)
+        os = overpyshapely.overpyshapely.OverToShape(res)
         shape = os.get_relation_shape()
         print(json.dumps(shapely.geometry.mapping(shape)))
         borders = shapely.geometry.asShape(json.loads("""
