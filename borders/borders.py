@@ -1,10 +1,10 @@
 import itertools
-import math
 import time
 import typing
 import xml.etree.ElementTree as ET
 
 import cachetools.func
+import math
 import requests
 import shapely.geometry
 import shapely.ops
@@ -97,7 +97,7 @@ def create_MLS(obj1, obj2):
     geoms = []
 
     def to_list(obj):
-        if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
+        if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry) and len(obj) > 1:
             obj = shapely.ops.linemerge(obj)
             if isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
                 return [x for x in obj.geoms]
@@ -116,7 +116,9 @@ def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
             if border == other:
                 continue
             intersec = border.geometry.intersection(other.geometry)
-
+            if isinstance(intersec, shapely.geometry.GeometryCollection):
+                intersec = shapely.ops.cascaded_union(
+                    [x for x in intersec.geoms if not isinstance(x, shapely.geometry.Point)])
             border.geometry = create_MLS(intersec, border.geometry.difference(intersec))
             other.geometry = create_MLS(intersec, other.geometry.difference(intersec))
     return borders

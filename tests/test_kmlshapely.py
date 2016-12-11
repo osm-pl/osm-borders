@@ -7,6 +7,7 @@ import converters.kmlshapely
 
 logging.basicConfig(level=10)
 
+
 class KmlShapelyTests(unittest.TestCase):
     def test1(self):
         with open("example.kml") as f:

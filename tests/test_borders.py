@@ -146,6 +146,59 @@ class OverpyShapely(unittest.TestCase):
             shapely.geometry.LinearRing(
                 [
                     (0, 0),
+                    (0, 2),
+                    (1, 2),
+                    (1, 0),
+                ]
+            ))
+
+        rv = borders.borders.split_by_common_ways([bottom, upper, outline])
+
+        self.assertEqual(len(rv[0].geometry.geoms), 2)
+        self.assertTrue(
+            (shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[0].geometry.geoms)) or (
+                shapely.geometry.LineString([(1, 1), (0, 1)]) in list(rv[0].geometry.geoms)
+            )
+        )
+        self.assertEqual(len(rv[1].geometry.geoms), 2)
+        self.assertTrue(shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[1].geometry.geoms))
+        self.assertEqual(len(rv[2].geometry.geoms), 2)
+        self.assertTrue(shapely.geometry.LineString([(1, 1), (1, 2), (0, 2), (0, 1)]) in list(rv[2].geometry.geoms))
+        self.assertTrue(shapely.geometry.LineString([(1, 1), (1, 0), (0, 0), (0, 1)]) in list(rv[2].geometry.geoms))
+
+    def test_3_geo_line_and_outline_reversed(self):
+        # three boxes:
+        # (0,2)---(1,2)
+        #   |       |
+        # (0,1)---(1,1)
+        #   |       |
+        # (0,0)---(1,0)
+        # 2 small one - bottom and upper, and one outline
+        bottom = converters.feature.Feature(
+            shapely.geometry.LinearRing(
+                [
+                    (0, 0),
+                    (0, 1),
+                    (1, 1),
+                    (1, 0),
+                ]
+            ))
+
+        upper = converters.feature.Feature(
+            shapely.geometry.LinearRing(
+                reversed([
+                    (0, 1),
+                    (1, 1),
+                    (1, 2),
+                    (0, 2),
+
+                ])
+            ))
+
+        outline = converters.feature.Feature(
+            shapely.geometry.LinearRing(
+                [
+                    (0, 0),
                     (1, 0),
                     (1, 2),
                     (0, 2),
@@ -155,11 +208,13 @@ class OverpyShapely(unittest.TestCase):
         rv = borders.borders.split_by_common_ways([bottom, upper, outline])
 
         self.assertEqual(len(rv[0].geometry.geoms), 2)
-        self.assertTrue(shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[0].geometry.geoms))
+        self.assertTrue(
+            shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[0].geometry.geoms)
+        )
         self.assertEqual(len(rv[1].geometry.geoms), 2)
         self.assertTrue(shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[1].geometry.geoms))
         self.assertEqual(len(rv[2].geometry.geoms), 2)
-        self.assertTrue(shapely.geometry.LineString([(1, 1), (1, 2), (0, 2), (0, 1)]) in list(rv[2].geometry.geoms))
+        self.assertTrue(shapely.geometry.LineString([(0, 1), (0, 2), (1, 2), (1, 1)]) in list(rv[2].geometry.geoms))
         self.assertTrue(shapely.geometry.LineString([(1, 1), (1, 0), (0, 0), (0, 1)]) in list(rv[2].geometry.geoms))
 
     def test_split_extra_line(self):
@@ -190,4 +245,28 @@ class OverpyShapely(unittest.TestCase):
             )
         )
         rv = borders.borders.split_by_common_ways([border1, border2])
-        self.assertEqual(len(rv[0].geometry.geoms), 1)
+        self.assertEqual(len(rv[0].geometry.geoms), 2)
+
+    def test_split_one_common_edge(self):
+        # 2 boxes exactly the same with extra point along the line
+        border1 = converters.feature.Feature(
+            shapely.geometry.LineString(
+                [
+                    (0, 0),
+                    (0, 2),
+                ]
+            )
+        )
+        border2 = converters.feature.Feature(
+            shapely.geometry.LineString(
+                [
+                    (0, 0),
+                    (0, 2),
+                    (2, 2),
+                    (2, 0),
+                    (0, 0),
+                ]
+            )
+        )
+        rv = borders.borders.split_by_common_ways([border1, border2])
+        self.assertEqual(len(rv[1].geometry.geoms), 2)
