@@ -1,6 +1,7 @@
 import json
 import logging
 import unittest
+from xml.etree import ElementTree as ET
 
 import overpy
 import shapely.geometry
@@ -23,6 +24,10 @@ class OverpyShapely(unittest.TestCase):
             ret = borders.borders.process(OverToShape(res).get_relation_feature().geometry, obj)
         with open("../out.osm", "wb+") as f:
             f.write(ret)
+
+        rv = overpy.Result.from_xml(ET.fromstring(ret))
+        self.assertTrue(any(len([y for y in x.members if y.role == 'outer']) > 1 for x in rv.relations))
+        print(rv)
 
     def test_split_extra_point(self):
         # 2 boxes exactly the same with extra point along the line
@@ -270,3 +275,59 @@ class OverpyShapely(unittest.TestCase):
         )
         rv = borders.borders.split_by_common_ways([border1, border2])
         self.assertEqual(len(rv[1].geometry.geoms), 2)
+
+    def test_lines_shared_by_3(self):
+        # three boxes:
+        # (0,2)---(1,2)---(2,2)
+        #   |       |       |
+        # (0,1)---(1,1)     |
+        #   |       |       |
+        # (0,0)---(1,0)----(2,0)
+        # 2 small one - bottom and upper, and one outline
+        bottom = converters.feature.Feature(
+            shapely.geometry.LinearRing(
+                [
+                    (0, 0),
+                    (0, 1),
+                    (1, 1),
+                    (1, 0),
+                ]
+            ))
+
+        upper = converters.feature.Feature(
+            shapely.geometry.LinearRing(
+                reversed([
+                    (0, 1),
+                    (1, 1),
+                    (1, 2),
+                    (0, 2),
+
+                ])
+            ))
+
+        right = converters.feature.Feature(
+            shapely.geometry.LinearRing(
+                [
+                    (1, 0),
+                    (2, 0),
+                    (2, 2),
+                    (1, 2),
+                ]
+            ))
+
+        rv = borders.borders.split_by_common_ways([bottom, upper, right])
+
+        self.assertEqual(len(rv[0].geometry.geoms), 4)
+        self.assertTrue(
+            shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[0].geometry.geoms)
+        )
+        self.assertTrue(
+            shapely.geometry.LineString([(1, 1), (1, 0)]) in list(rv[0].geometry.geoms)
+        )
+
+        self.assertEqual(len(rv[1].geometry.geoms), 3)
+        self.assertTrue(shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[1].geometry.geoms))
+        self.assertTrue(shapely.geometry.LineString([(1, 2), (1, 1)]) in list(rv[1].geometry.geoms))
+        self.assertEqual(len(rv[2].geometry.geoms), 3)
+        self.assertTrue(shapely.geometry.LineString([(1, 2), (1, 1)]) in list(rv[2].geometry.geoms))
+        self.assertTrue(shapely.geometry.LineString([(1, 1), (1, 0)]) in list(rv[2].geometry.geoms))

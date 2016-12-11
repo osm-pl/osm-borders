@@ -1,4 +1,5 @@
 import itertools
+import logging
 import time
 import typing
 import xml.etree.ElementTree as ET
@@ -14,6 +15,7 @@ from converters.kmlshapely import Feature
 from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
 
+__log = logging.getLogger(__name__)
 
 @cachetools.func.ttl_cache(maxsize=128, ttl=600)
 def get_adm_border(terc: str) -> Feature:
@@ -86,21 +88,27 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
     borders = [x for x in borders if
                x.geometry.within(adm_bound) and (
                    x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)]
+    for border in borders:
+        border.geometry = border.geometry.boundary
     id_ = itertools.count(-1, -1)
     out_xml = ET.Element("osm", {'generator': 'osm-borders', 'version': '0.6'})
-    for border in borders:
+    for border in split_by_common_ways(borders):
         dump_relation(out_xml, border, id_)
     return ET.tostring(out_xml, encoding='utf-8')
 
 
-def create_MLS(obj1, obj2):
+def try_linemerge(obj):
+    if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
+        return shapely.ops.linemerge(obj)
+    return obj
+
+
+def create_multi_string(obj1, obj2):
     geoms = []
 
     def to_list(obj):
-        if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry) and len(obj) > 1:
-            obj = shapely.ops.linemerge(obj)
-            if isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
-                return [x for x in obj.geoms]
+        if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
+            return [x for x in obj.geoms]
         if obj.is_empty:
             return []
         return [obj, ]
@@ -115,16 +123,19 @@ def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
         for other in borders:
             if border == other:
                 continue
-            intersec = border.geometry.intersection(other.geometry)
+            intersec = try_linemerge(border.geometry.intersection(other.geometry))
             if isinstance(intersec, shapely.geometry.GeometryCollection):
                 intersec = shapely.ops.cascaded_union(
                     [x for x in intersec.geoms if not isinstance(x, shapely.geometry.Point)])
-            border.geometry = create_MLS(intersec, border.geometry.difference(intersec))
-            other.geometry = create_MLS(intersec, other.geometry.difference(intersec))
+            if isinstance(intersec, shapely.geometry.Point):
+                intersec = shapely.geometry.LineString()  # empty geometry
+            border.geometry = create_multi_string(intersec, border.geometry.difference(intersec))
+            other.geometry = create_multi_string(intersec, other.geometry.difference(intersec))
     return borders
 
 
 def dump_relation(tree, border: Feature, id_):
+    __log.debug("Dumping relation: {0}".format(border))
     rel = ET.SubElement(tree, "relation", {'id': str(next(id_))})
     (outer, inner) = dump_ways(tree, border, id_)
     for key, value in border.tags.items():
@@ -150,18 +161,23 @@ def dump_ways(tree, border: Feature, id_) -> typing.Tuple[typing.List[int], typi
             ET.SubElement(way, "nd", {'ref': str(node)})
         return current_id
 
-    if geojson['type'] == 'Polygon':
+    if geojson['type'] == 'Polygon' or geojson['type'] == 'LineString':
         coords = geojson['coordinates']
         outer.append(algo(coords[0]))
         if len(coords) > 1:
             for way in coords[1:]:
                 inner.append(algo(way))
-    if geojson['type'] == 'MultiPolygon':
+    elif geojson['type'] == 'MultiLineString':
+        outer.extend(algo(x) for x in geojson['coordinates'])
+
+    elif geojson['type'] == 'MultiPolygon':
         for polygon in geojson['coordinates']:
             outer.append(algo(polygon[0]))
             if len(polygon) > 1:
                 for way in polygon[1:]:
                     inner.append(algo(way))
+    else:
+        raise ValueError("Unkown GeoJSON Type found: {0}".format(geojson['type']))
     return outer, inner
 
 

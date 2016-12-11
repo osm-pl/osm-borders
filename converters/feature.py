@@ -31,3 +31,5 @@ class Feature:
     def tags(self):
         return self._tags
 
+    def __str__(self):
+        return str(self._tags)
