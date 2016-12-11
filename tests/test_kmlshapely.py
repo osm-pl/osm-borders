@@ -13,16 +13,16 @@ class KmlShapelyTests(unittest.TestCase):
         with open("example.kml") as f:
             content = f.read()
             obj = converters.kmlshapely.kml_to_shapely(content)
-            self.assertEqual("Krynki-Sobole (0028702)", obj[0].get_tag('name'))
-            self.assertEqual("2010042", obj[0].get_tag('TERYT_JEDNOSTKI'))
+            self.assertEqual("layer_miejscowosci_granica.1488043", obj[0].get_tag('name'))
+            self.assertEqual("2005062", obj[0].get_tag('TERYT_JEDNOSTKI'))
             self.assertTrue(
                 shapely.geometry.Polygon(
                     [
-                        (22.754402, 52.515541),
-                        (22.754402, 52.553393),
-                        (22.804012, 52.553393),
-                        (22.804012, 52.515541),
-                        (22.754402, 52.515541)
+                        (23.480308, 52.737712),
+                        (23.480308, 52.776607),
+                        (23.537287, 52.776607),
+                        (23.537287, 52.737712),
+                        (23.480308, 52.737712)
                     ]
                 ).contains(
                     obj[0].geometry
