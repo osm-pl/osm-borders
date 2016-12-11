@@ -104,7 +104,7 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
 
 
 def try_linemerge(obj):
-    if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
+    if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry) and len(obj) > 1:
         return shapely.ops.linemerge(obj)
     return obj
 
@@ -129,12 +129,13 @@ def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
         for other in borders:
             if border == other:
                 continue
-            intersec = try_linemerge(border.geometry.intersection(other.geometry))
+            intersec = border.geometry.intersection(other.geometry)
             if isinstance(intersec, shapely.geometry.GeometryCollection):
                 intersec = shapely.ops.cascaded_union(
                     [x for x in intersec.geoms if not isinstance(x, shapely.geometry.Point)])
             if isinstance(intersec, shapely.geometry.Point):
                 intersec = shapely.geometry.LineString()  # empty geometry
+            intersec = try_linemerge(intersec)
             border.geometry = create_multi_string(intersec, border.geometry.difference(intersec))
             other.geometry = create_multi_string(intersec, other.geometry.difference(intersec))
     return borders
