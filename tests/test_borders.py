@@ -20,7 +20,7 @@ class OverpyShapely(unittest.TestCase):
             res = overpy.Result.from_json(json.load(f))
         with open("example.kml") as f:
             obj = kml_to_shapely(f.read())
-            ret = borders.borders.process(OverToShape(res).get_relation_shape(), obj)
+            ret = borders.borders.process(OverToShape(res).get_relation_feature().geometry, obj)
         with open("../out.osm", "wb+") as f:
             f.write(ret)
 
@@ -50,7 +50,7 @@ class OverpyShapely(unittest.TestCase):
             )
         )
         rv = borders.borders.split_by_common_ways([border1, border2])
-        self.assertEqual(len(rv[0].border.geoms), 1)
+        self.assertEqual(len(rv[0].geometry.geoms), 1)
 
     def test_split_same_geo(self):
         # 2 boxes exactly the same
@@ -77,7 +77,7 @@ class OverpyShapely(unittest.TestCase):
             )
         )
         rv = borders.borders.split_by_common_ways([border1, border2])
-        self.assertEqual(len(rv[0].border.geoms), 1)
+        self.assertEqual(len(rv[0].geometry.geoms), 1)
 
     def test_split_one_line(self):
         # two boxes - left and right
@@ -108,9 +108,9 @@ class OverpyShapely(unittest.TestCase):
             )
         )
         rv = borders.borders.split_by_common_ways([left, right])
-        self.assertEqual(len(rv[0].border.geoms), 2)
-        self.assertEqual(len(rv[1].border.geoms), 2)
-        geoms = list(rv[0].border.geoms)
+        self.assertEqual(len(rv[0].geometry.geoms), 2)
+        self.assertEqual(len(rv[1].geometry.geoms), 2)
+        geoms = list(rv[0].geometry.geoms)
         self.assertTrue(shapely.geometry.LineString([(1, 1), (1, 0)]) in geoms)
 
     def test_3_geo_line_and_outline(self):
@@ -154,10 +154,40 @@ class OverpyShapely(unittest.TestCase):
 
         rv = borders.borders.split_by_common_ways([bottom, upper, outline])
 
-        self.assertEqual(len(rv[0].border.geoms), 2)
-        self.assertTrue(shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[0].border.geoms))
-        self.assertEqual(len(rv[1].border.geoms), 2)
-        self.assertTrue(shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[1].border.geoms))
-        self.assertEqual(len(rv[2].border.geoms), 2)
-        self.assertTrue(shapely.geometry.LineString([(1, 1), (1, 2), (0, 2), (0, 1)]) in list(rv[2].border.geoms))
-        self.assertTrue(shapely.geometry.LineString([(1, 1), (1, 0), (0, 0), (0, 1)]) in list(rv[2].border.geoms))
+        self.assertEqual(len(rv[0].geometry.geoms), 2)
+        self.assertTrue(shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[0].geometry.geoms))
+        self.assertEqual(len(rv[1].geometry.geoms), 2)
+        self.assertTrue(shapely.geometry.LineString([(0, 1), (1, 1)]) in list(rv[1].geometry.geoms))
+        self.assertEqual(len(rv[2].geometry.geoms), 2)
+        self.assertTrue(shapely.geometry.LineString([(1, 1), (1, 2), (0, 2), (0, 1)]) in list(rv[2].geometry.geoms))
+        self.assertTrue(shapely.geometry.LineString([(1, 1), (1, 0), (0, 0), (0, 1)]) in list(rv[2].geometry.geoms))
+
+    def test_split_extra_line(self):
+        # 2 boxes exactly the same with extra point along the line
+        border1 = converters.feature.Feature(
+            shapely.geometry.MultiLineString([
+                [
+                    (0, 0),
+                    (0, 2),
+                    (2, 2),
+                ], [
+                    (2, 2),
+                    (2, 0),
+                    (0, 0)
+                ]
+            ])
+        )
+        border2 = converters.feature.Feature(
+            shapely.geometry.LineString(
+                [
+                    (0, 1),
+                    (0, 2),
+                    (2, 2),
+                    (2, 0),
+                    (0, 0),
+                    (0, 1)
+                ]
+            )
+        )
+        rv = borders.borders.split_by_common_ways([border1, border2])
+        self.assertEqual(len(rv[0].geometry.geoms), 1)

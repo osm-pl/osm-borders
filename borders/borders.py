@@ -16,7 +16,7 @@ from converters.overpyshapely import OverToShape
 
 
 @cachetools.func.ttl_cache(maxsize=128, ttl=600)
-def get_adm_border(terc: str) -> shapely.geometry.Polygon:
+def get_adm_border(terc: str) -> Feature:
     api = Overpass()
     result = api.query("""
 [out:json];
@@ -30,7 +30,7 @@ out bb;
     """ % (terc,))
     if not result.relations:
         raise ValueError("No relation found for terc: {0}".format(terc))
-    return OverToShape(result).get_relation_shape()
+    return OverToShape(result).get_relation_feature()
 
 
 def divide_bbox(bbox):
@@ -74,17 +74,18 @@ def fetch_from_emuia(bbox):
 
 
 def get_borders(terc: str):
-    adm_bound = get_adm_border(terc)
+    adm_bound = get_adm_border(terc).geometry
     borders = []
     for bbox in divide_bbox(adm_bound.bounds):  # area we need to fetch from EMUiA
         borders.extend(fetch_from_emuia(bbox))
     return process(adm_bound, borders)
 
 
-def process(adm_bound, borders):
+def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[Feature]):
     adm_bound = adm_bound.buffer(0.001)  # ~ 100m along meridian
     borders = [x for x in borders if
-               x.border.within(adm_bound) and (x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)]
+               x.geometry.within(adm_bound) and (
+                   x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)]
     id_ = itertools.count(-1, -1)
     out_xml = ET.Element("osm", {'generator': 'osm-borders', 'version': '0.6'})
     for border in borders:
@@ -114,10 +115,10 @@ def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
         for other in borders:
             if border == other:
                 continue
-            intersec = border.border.intersection(other.border)
+            intersec = border.geometry.intersection(other.geometry)
 
-            border.border = create_MLS(intersec, border.border.difference(intersec))
-            other.border = create_MLS(intersec, other.border.difference(intersec))
+            border.geometry = create_MLS(intersec, border.geometry.difference(intersec))
+            other.geometry = create_MLS(intersec, other.geometry.difference(intersec))
     return borders
 
 
@@ -137,7 +138,7 @@ def dump_relation(tree, border: Feature, id_):
 def dump_ways(tree, border: Feature, id_) -> typing.Tuple[typing.List[int], typing.List[int]]:
     outer = []
     inner = []
-    geojson = shapely.geometry.mapping(border.border)
+    geojson = shapely.geometry.mapping(border.geometry)
 
     def algo(way):
         nodes = dump_points(tree, way, id_)

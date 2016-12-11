@@ -21,7 +21,7 @@ class OverpyShapely(unittest.TestCase):
     def test1(self):
         res = self.get_overpy_result()
         os = converters.overpyshapely.OverToShape(res)
-        shape = os.get_relation_shape()
+        shape = os.get_relation_feature().geometry
         print(json.dumps(shapely.geometry.mapping(shape)))
         borders = shapely.geometry.asShape(json.loads("""
 {

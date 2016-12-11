@@ -24,6 +24,6 @@ class KmlShapelyTests(unittest.TestCase):
                         (22.754402, 52.515541)
                     ]
                 ).contains(
-                    obj[0].border
+                    obj[0].geometry
                 )
             )

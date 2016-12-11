@@ -2,6 +2,8 @@ import overpy
 import shapely.geometry
 import shapely.ops
 
+from .feature import Feature
+
 
 class OverToShape(object):
     def __init__(self, result: overpy.Result):
@@ -15,20 +17,32 @@ class OverToShape(object):
             raise ValueError("Expected at most one relation, got: {0}".format(", ".join(lst)))
         return lst[0]
 
-    def get_node_shape(self, id: int = None) -> shapely.geometry.Point:
+    def get_node_feature(self, id: int = None) -> Feature:
         if not id:
             id = self._default_id(self._result.node_ids)
-        return self._node_to_shapely(self._result.get_node(id))
+        node = self._result.get_node(id)
+        return Feature(self._node_to_shapely(node), node.tags)
 
-    def get_way_shape(self, id: int = None) -> shapely.geometry.base.BaseGeometry:
+    def get_way_feature(self, id: int = None) -> Feature:
         if not id:
             id = self._default_id(self._result.way_ids)
-        return self._way_to_shapely(self._result.get_way(id))
+        way = self._result.get_way(id)
+        return Feature(self._way_to_shapely(way), way.tags)
 
-    def get_relation_shape(self, id: int = None) -> shapely.geometry.Polygon:
+    def get_relation_feature(self, id: int = None) -> Feature:
         if not id:
             id = self._default_id(self._result.relation_ids)
-        return self._relation_to_shapely(self._result.get_relation(id))
+        relation = self._result.get_relation(id)
+        return Feature(self._relation_to_shapely(relation), relation.tags)
+
+    def get_relation_feature_multi(self, id: int = None) -> Feature:
+        if not id:
+            id = self._default_id(self._result.relation_ids)
+        relation = self._result.get_relation(id)
+        return Feature(
+            shapely.geometry.MultiLineString([self._obj_to_shapely(x) for x in relation.members]),
+            relation.tags
+        )
 
     def _obj_to_shapely(self, obj: overpy.Element) -> shapely.geometry.base.BaseGeometry:
         if isinstance(obj, overpy.Node):
