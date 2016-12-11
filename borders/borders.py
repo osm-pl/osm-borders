@@ -27,6 +27,8 @@ out bb;
 >;
 out bb;
     """ % (terc,))
+    if not result.relations:
+        raise ValueError("No relation found for terc: {0}".format(terc))
     return OverToShape(result).get_relation_shape()
 
 
