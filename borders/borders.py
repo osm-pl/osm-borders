@@ -16,6 +16,12 @@ from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
 
 __log = logging.getLogger(__name__)
+__object_store = {
+    'way': {},
+    'point': {},
+    'relation': {}
+}
+
 
 @cachetools.func.ttl_cache(maxsize=128, ttl=600)
 def get_adm_border(terc: str) -> Feature:
@@ -154,8 +160,12 @@ def dump_ways(tree, border: Feature, id_) -> typing.Tuple[typing.List[int], typi
     geojson = shapely.geometry.mapping(border.geometry)
 
     def algo(way):
+        cached_way = __object_store['way'].get(way)
+        if cached_way:
+            return cached_way
         nodes = dump_points(tree, way, id_)
         current_id = next(id_)
+        __object_store['way'][way] = current_id
         way = ET.SubElement(tree, "way", {'id': str(current_id)})
         for node in nodes:
             ET.SubElement(way, "nd", {'ref': str(node)})
@@ -184,7 +194,12 @@ def dump_ways(tree, border: Feature, id_) -> typing.Tuple[typing.List[int], typi
 def dump_points(tree, points: list, id_) -> typing.List[int]:
     rv = []
     for point in points:
-        current_id = next(id_)
+        cached_point = __object_store['point'].get(point)
+        if cached_point:
+            current_id = cached_point
+        else:
+            current_id = next(id_)
+            __object_store['point'][point] = current_id
+            ET.SubElement(tree, "node", {'id': str(current_id), 'lon': str(point[0]), 'lat': str(point[1])})
         rv.append(current_id)
-        ET.SubElement(tree, "node", {'id': str(current_id), 'lon': str(point[0]), 'lat': str(point[1])})
     return rv
