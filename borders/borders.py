@@ -7,7 +7,7 @@ import xml.etree.ElementTree as ET
 import cachetools.func
 import requests
 import shapely.geometry
-import shapely.geometry
+import shapely.ops
 from overpy import Overpass
 
 from converters.kmlshapely import Border
@@ -91,6 +91,34 @@ def process(adm_bound, borders):
         dump_relation(out_xml, border, id_)
     return ET.tostring(out_xml, encoding='utf-8')
 
+
+def create_MLS(obj1, obj2):
+    geoms = []
+
+    def to_list(obj):
+        if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
+            obj = shapely.ops.linemerge(obj)
+            if isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
+                return [x for x in obj.geoms]
+        if obj.is_empty:
+            return []
+        return [obj, ]
+
+    geoms.extend(to_list(obj1))
+    geoms.extend(to_list(obj2))
+    return shapely.geometry.MultiLineString(geoms)
+
+
+def split_by_common_ways(borders: typing.List[Border]) -> typing.List[Border]:
+    for border in borders:
+        for other in borders:
+            if border == other:
+                continue
+            intersec = border.border.intersection(other.border)
+
+            border.border = create_MLS(intersec, border.border.difference(intersec))
+            other.border = create_MLS(intersec, other.border.difference(intersec))
+    return borders
 
 def dump_relation(tree, border: Border, id_):
     rel = ET.SubElement(tree, "relation", {'id': str(next(id_))})

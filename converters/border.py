@@ -7,7 +7,7 @@ class Border:
         :type geometry: shapely.geometry.base
         """
         assert isinstance(geometry, shapely.geometry.base.BaseGeometry)
-        self._border = geometry
+        self.border = geometry
         self._tags = {}
 
     def set_tag(self, key: str, value: str):
@@ -20,7 +20,7 @@ class Border:
     def geojson(self):
         return {
             'type': "Feature",
-            'geometry': shapely.geometry.mapping(self._border),
+            'geometry': shapely.geometry.mapping(self.border),
             'properties': self._tags
         }
 
@@ -28,6 +28,3 @@ class Border:
     def tags(self):
         return self._tags
 
-    @property
-    def border(self):
-        return self._border
