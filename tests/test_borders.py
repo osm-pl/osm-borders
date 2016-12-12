@@ -25,6 +25,11 @@ class OverpyShapely(unittest.TestCase):
         with open("../out.osm", "wb+") as f:
             f.write(ret)
 
+        with open("example.kml") as f:
+            obj = kml_to_shapely(f.read())
+            ret2 = borders.borders.process(OverToShape(res).get_relation_feature().geometry, obj)
+        self.assertEqual(ret, ret2)
+
         rv = overpy.Result.from_xml(ET.fromstring(ret))
         self.assertTrue(any(len([y for y in x.members if y.role == 'outer']) > 1 for x in rv.relations))
         print(rv)

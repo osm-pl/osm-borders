@@ -56,7 +56,7 @@ def divide_bbox(bbox):
 
 
 @cachetools.func.ttl_cache(maxsize=128, ttl=600)
-def fetch_from_emuia(bbox):
+def fetch_from_emuia_cached(bbox):
     resp = requests.get("http://emuia1.gugik.gov.pl/wmsproxy/emuia/wms",
                         params={
                             "FORMAT": "application/vnd.google-earth.kml+xml",
@@ -73,7 +73,11 @@ def fetch_from_emuia(bbox):
                             "BBOX": "{0},{1},{2},{3}".format(*bbox)
                         },
                         verify=False)
-    return kml_to_shapely(resp.text)
+    return resp.text
+
+
+def fetch_from_emuia(bbox):
+    return kml_to_shapely(fetch_from_emuia_cached(bbox))
 
 
 def get_borders(terc: str):
