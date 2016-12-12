@@ -1,3 +1,4 @@
+import itertools
 import json
 import logging
 import unittest
@@ -11,11 +12,23 @@ import converters.feature
 from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
 
-logging.basicConfig(level=10)
+logging.basicConfig(level=logging.DEBUG)
 
 
 class OverpyShapely(unittest.TestCase):
     def test_process(self):
+        # res = overpy.Overpass().query("[out:json];relation(3094349);out;>;out;")#.get_relation(3094349)
+        with open("example.json") as f:
+            res = overpy.Result.from_json(json.load(f))
+        with open("example.kml") as f:
+            obj = kml_to_shapely(f.read())
+            ret = borders.borders.process(OverToShape(res).get_relation_feature().geometry, obj)
+        with open("../out.osm", "wb+") as f:
+            f.write(ret)
+        rv = overpy.Result.from_xml(ET.fromstring(ret))
+        self.assertTrue(any(len([y for y in x.members if y.role == 'outer']) > 1 for x in rv.relations))
+
+    def test_verify_no_cache_poison(self):
         # res = overpy.Overpass().query("[out:json];relation(3094349);out;>;out;")#.get_relation(3094349)
         with open("example.json") as f:
             res = overpy.Result.from_json(json.load(f))
@@ -30,9 +43,22 @@ class OverpyShapely(unittest.TestCase):
             ret2 = borders.borders.process(OverToShape(res).get_relation_feature().geometry, obj)
         self.assertEqual(ret, ret2)
 
+    def test_no_overlapping_ways(self):
+        # res = overpy.Overpass().query("[out:json];relation(3094349);out;>;out;")#.get_relation(3094349)
+        with open("example.json") as f:
+            adm_boundary = overpy.Result.from_json(json.load(f))
+        with open("2010042_part_1.kml") as part1, open("2010042_part_2.kml") as part2:
+            obj = kml_to_shapely(part1.read())
+            obj.extend(kml_to_shapely(part2.read()))
+            ret = borders.borders.process(OverToShape(adm_boundary).get_relation_feature().geometry, obj)
+        with open("../out.osm", "wb+") as f:
+            f.write(ret)
+
         rv = overpy.Result.from_xml(ET.fromstring(ret))
-        self.assertTrue(any(len([y for y in x.members if y.role == 'outer']) > 1 for x in rv.relations))
-        print(rv)
+        inner_nodes = sorted(list(x.id for x in itertools.chain(*(way.nodes[1:-1] for way in rv.get_ways()))))
+        dup_nodes = [x[0] for x in itertools.groupby(inner_nodes) if len(list(x[1])) > 1]
+        self.assertFalse(dup_nodes, "Duplicate nodes found: {0}".format(len(dup_nodes)))
+
 
     def test_split_extra_point(self):
         # 2 boxes exactly the same with extra point along the line
