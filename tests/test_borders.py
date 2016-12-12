@@ -49,7 +49,7 @@ class OverpyShapely(unittest.TestCase):
             adm_boundary = overpy.Result.from_json(json.load(f))
         with open("2010042_part_1.kml") as part1, open("2010042_part_2.kml") as part2:
             obj = kml_to_shapely(part1.read())
-            obj.extend(kml_to_shapely(part2.read()))
+            # obj.extend(kml_to_shapely(part2.read()))
             ret = borders.borders.process(OverToShape(adm_boundary).get_relation_feature().geometry, obj)
         with open("../out.osm", "wb+") as f:
             f.write(ret)

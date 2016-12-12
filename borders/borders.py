@@ -11,6 +11,7 @@ import shapely.geometry
 import shapely.ops
 from overpy import Overpass
 
+from converters.feature import ImmutableFeature
 from converters.kmlshapely import Feature
 from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
@@ -90,11 +91,19 @@ def get_borders(terc: str):
 
 def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[Feature]):
     adm_bound = adm_bound.buffer(0.001)  # ~ 100m along meridian
-    borders = [x for x in borders if
-               x.geometry.within(adm_bound) and (
-                   x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)]
+
+    def valid_border(x):
+        return x.geometry.within(adm_bound) and (x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)
+
+    # __log.debug("Names before dedup: {0}".format(", ".join(sorted(x.tags['NAZWA'] for x in borders))))
+    __log.debug("Names before dedup: {0}".format(len([x.tags['NAZWA'] for x in borders])))
+    borders = [im.to_feature() for im in set(ImmutableFeature(x) for x in borders if valid_border(x))]
+    # __log.debug("Names after  dedup: {0}".format(", ".join(sorted(x.tags['NAZWA'] for x in borders))))
+    __log.debug("Names after dedup: {0}".format(len([x.tags['NAZWA'] for x in borders])))
+
+
     for border in borders:
-        border.geometry = border.geometry.boundary
+        border.geometry = border.geometry.boundary  # use LineStrings instead of Polygons
 
     return FeatureToOsm(borders).tostring()
 
