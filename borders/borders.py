@@ -16,11 +16,6 @@ from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
 
 __log = logging.getLogger(__name__)
-__object_store = {
-    'way': {},
-    'point': {},
-    'relation': {}
-}
 
 
 @cachetools.func.ttl_cache(maxsize=128, ttl=600)
@@ -96,11 +91,8 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
                    x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)]
     for border in borders:
         border.geometry = border.geometry.boundary
-    id_ = itertools.count(-1, -1)
-    out_xml = ET.Element("osm", {'generator': 'osm-borders', 'version': '0.6'})
-    for border in split_by_common_ways(borders):
-        dump_relation(out_xml, border, id_)
-    return ET.tostring(out_xml, encoding='utf-8')
+
+    return FeatureToOsm(borders).tostring()
 
 
 def try_linemerge(obj):
@@ -141,66 +133,82 @@ def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
     return borders
 
 
-def dump_relation(tree, border: Feature, id_):
-    __log.debug("Dumping relation: {0}".format(border))
-    rel = ET.SubElement(tree, "relation", {'id': str(next(id_))})
-    (outer, inner) = dump_ways(tree, border, id_)
-    for key, value in border.tags.items():
-        ET.SubElement(rel, "tag", {'k': key, 'v': value})
+class FeatureToOsm:
+    __log = logging.getLogger(__name__)
 
-    for way in outer:
-        ET.SubElement(rel, 'member', {'ref': str(way), 'role': 'outer', 'type': 'way'})
+    def __init__(self, borders):
+        self.__object_store = {
+            'way': {},
+            'point': {},
+            'relation': {}
+        }
+        self.id_ = itertools.count(-1, -1)
+        self.borders = borders
 
-    for way in inner:
-        ET.SubElement(rel, 'member', {'ref': str(way), 'role': 'inner', 'type': 'way'})
+    def tostring(self):
+        out_xml = ET.Element("osm", {'generator': 'osm-borders', 'version': '0.6'})
+        for border in split_by_common_ways(self.borders):
+            self.dump_relation(out_xml, border)
+        return ET.tostring(out_xml, encoding='utf-8')
 
+    def dump_relation(self, tree, border: Feature):
+        self.__log.debug("Dumping relation: {0}".format(border))
+        rel = ET.SubElement(tree, "relation", {'id': str(next(self.id_))})
+        (outer, inner) = self.dump_ways(tree, border)
+        for key, value in border.tags.items():
+            ET.SubElement(rel, "tag", {'k': key, 'v': value})
 
-def dump_ways(tree, border: Feature, id_) -> typing.Tuple[typing.List[int], typing.List[int]]:
-    outer = []
-    inner = []
-    geojson = shapely.geometry.mapping(border.geometry)
+        for way in outer:
+            ET.SubElement(rel, 'member', {'ref': str(way), 'role': 'outer', 'type': 'way'})
 
-    def algo(way):
-        cached_way = __object_store['way'].get(way)
-        if cached_way:
-            return cached_way
-        nodes = dump_points(tree, way, id_)
-        current_id = next(id_)
-        __object_store['way'][way] = current_id
-        way = ET.SubElement(tree, "way", {'id': str(current_id)})
-        for node in nodes:
-            ET.SubElement(way, "nd", {'ref': str(node)})
-        return current_id
+        for way in inner:
+            ET.SubElement(rel, 'member', {'ref': str(way), 'role': 'inner', 'type': 'way'})
 
-    if geojson['type'] == 'Polygon' or geojson['type'] == 'LineString':
-        coords = geojson['coordinates']
-        outer.append(algo(coords[0]))
-        if len(coords) > 1:
-            for way in coords[1:]:
-                inner.append(algo(way))
-    elif geojson['type'] == 'MultiLineString':
-        outer.extend(algo(x) for x in geojson['coordinates'])
+    def dump_ways(self, tree, border: Feature) -> typing.Tuple[typing.List[int], typing.List[int]]:
+        outer = []
+        inner = []
+        geojson = shapely.geometry.mapping(border.geometry)
 
-    elif geojson['type'] == 'MultiPolygon':
-        for polygon in geojson['coordinates']:
-            outer.append(algo(polygon[0]))
-            if len(polygon) > 1:
-                for way in polygon[1:]:
+        def algo(way):
+            cached_way = self.__object_store['way'].get(way)
+            if cached_way:
+                return cached_way
+            nodes = self.dump_points(tree, way)
+            current_id = next(self.id_)
+            self.__object_store['way'][way] = current_id
+            way = ET.SubElement(tree, "way", {'id': str(current_id)})
+            for node in nodes:
+                ET.SubElement(way, "nd", {'ref': str(node)})
+            return current_id
+
+        if geojson['type'] == 'Polygon' or geojson['type'] == 'LineString':
+            coords = geojson['coordinates']
+            outer.append(algo(coords[0]))
+            if len(coords) > 1:
+                for way in coords[1:]:
                     inner.append(algo(way))
-    else:
-        raise ValueError("Unkown GeoJSON Type found: {0}".format(geojson['type']))
-    return outer, inner
+        elif geojson['type'] == 'MultiLineString':
+            outer.extend(algo(x) for x in geojson['coordinates'])
 
-
-def dump_points(tree, points: list, id_) -> typing.List[int]:
-    rv = []
-    for point in points:
-        cached_point = __object_store['point'].get(point)
-        if cached_point:
-            current_id = cached_point
+        elif geojson['type'] == 'MultiPolygon':
+            for polygon in geojson['coordinates']:
+                outer.append(algo(polygon[0]))
+                if len(polygon) > 1:
+                    for way in polygon[1:]:
+                        inner.append(algo(way))
         else:
-            current_id = next(id_)
-            __object_store['point'][point] = current_id
-            ET.SubElement(tree, "node", {'id': str(current_id), 'lon': str(point[0]), 'lat': str(point[1])})
-        rv.append(current_id)
-    return rv
+            raise ValueError("Unkown GeoJSON Type found: {0}".format(geojson['type']))
+        return outer, inner
+
+    def dump_points(self, tree, points: list) -> typing.List[int]:
+        rv = []
+        for point in points:
+            cached_point = self.__object_store['point'].get(point)
+            if cached_point:
+                current_id = cached_point
+            else:
+                current_id = next(self.id_)
+                self.__object_store['point'][point] = current_id
+                ET.SubElement(tree, "node", {'id': str(current_id), 'lon': str(point[0]), 'lat': str(point[1])})
+            rv.append(current_id)
+        return rv
