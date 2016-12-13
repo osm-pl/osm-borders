@@ -89,6 +89,18 @@ def get_borders(terc: str):
     return process(adm_bound, borders)
 
 
+__TAG_MAPPING = {
+    'NAZWA': 'name',
+    'ZRODLO_GEOMETRII': 'source:geomtery',
+    'TERYT_MIEJSCOWOSCI': 'teryt:simc',
+}
+
+__DEFAULT_TAGS = {
+    'admin_level': 'TODO',
+    'boundary': 'administrative',
+    'type': 'boundary'
+}
+
 def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[Feature]):
     adm_bound = adm_bound.buffer(0.001)  # ~ 100m along meridian
 
@@ -105,7 +117,7 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
     for border in borders:
         border.geometry = border.geometry.boundary  # use LineStrings instead of Polygons
 
-    return FeatureToOsm(borders).tostring()
+    return FeatureToOsm(borders, __TAG_MAPPING, __DEFAULT_TAGS, 'emuia:').tostring()
 
 
 def try_linemerge(obj):
@@ -149,7 +161,7 @@ def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
 class FeatureToOsm:
     __log = logging.getLogger(__name__)
 
-    def __init__(self, borders):
+    def __init__(self, borders, tag_mapping: dict = None, default_tags: dict = None, tag_default_prefix: str = ""):
         self.__object_store = {
             'way': {},
             'point': {},
@@ -157,6 +169,9 @@ class FeatureToOsm:
         }
         self.id_ = itertools.count(-1, -1)
         self.borders = borders
+        self.tag_mapping = tag_mapping if tag_mapping else {}
+        self.default_tags = default_tags if default_tags else {}
+        self.tag_default_prefix = tag_default_prefix
 
     def tostring(self):
         out_xml = ET.Element("osm", {'generator': 'osm-borders', 'version': '0.6'})
@@ -168,8 +183,11 @@ class FeatureToOsm:
         self.__log.debug("Dumping relation: {0}".format(border))
         rel = ET.SubElement(tree, "relation", {'id': str(next(self.id_))})
         (outer, inner) = self.dump_ways(tree, border)
-        for key, value in border.tags.items():
+        for key, value in self.default_tags.items():
             ET.SubElement(rel, "tag", {'k': key, 'v': value})
+
+        for key, value in border.tags.items():
+            ET.SubElement(rel, "tag", {'k': self.tag_mapping.get(key, self.tag_default_prefix + key), 'v': value})
 
         for way in outer:
             ET.SubElement(rel, 'member', {'ref': str(way), 'role': 'outer', 'type': 'way'})
