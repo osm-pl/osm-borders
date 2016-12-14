@@ -121,24 +121,44 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
 
 
 def try_linemerge(obj):
-    if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry) and len(obj) > 1:
-        return shapely.ops.linemerge(obj)
+    if not obj.is_empty \
+            and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry) \
+            and len(obj) > 1 \
+            and not isinstance(obj, shapely.geometry.MultiPoint):
+        return shapely.ops.linemerge(
+            shapely.geometry.MultiLineString([x for x in obj if not isinstance(x, shapely.geometry.Point)]))
     return obj
+
+
+def get_raw_geometries(obj: shapely.geometry.base.BaseGeometry) -> typing.List[shapely.geometry.base.BaseGeometry]:
+    if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
+        return [x for x in obj.geoms]
+    if obj.is_empty:
+        return []
+    return [obj, ]
 
 
 def create_multi_string(obj1, obj2):
     geoms = []
 
-    def to_list(obj):
-        if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
-            return [x for x in obj.geoms]
-        if obj.is_empty:
-            return []
-        return [obj, ]
-
-    geoms.extend(to_list(obj1))
-    geoms.extend(to_list(obj2))
+    geoms.extend(get_raw_geometries(obj1))
+    geoms.extend(get_raw_geometries(obj2))
     return shapely.geometry.MultiLineString(geoms)
+
+
+def split_intersec(intersec, objs):
+    rv = intersec
+    for obj in objs:
+        if not isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
+            continue  # nothing to be done
+        for geom in obj.geoms:
+            small_intersec = try_linemerge(geom.intersection(intersec))
+            if geom.intersects(intersec) and not isinstance(small_intersec,
+                                                            (shapely.geometry.Point, shapely.geometry.MultiPoint)):
+                rest = get_raw_geometries(rv.difference(small_intersec))
+                if rest:
+                    rv = shapely.geometry.MultiLineString((*get_raw_geometries(small_intersec), *rest))
+    return rv
 
 
 def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
@@ -146,17 +166,20 @@ def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
         for other in borders:
             if border == other:
                 continue
+            __log.debug("Processing border ({0}, {1})".format(borders.index(border), borders.index(other)))
             intersec = border.geometry.intersection(other.geometry)
+            if intersec.is_empty:
+                continue  # nothing will change anyway
             if isinstance(intersec, shapely.geometry.GeometryCollection):
                 intersec = shapely.ops.cascaded_union(
                     [x for x in intersec.geoms if not isinstance(x, shapely.geometry.Point)])
             if isinstance(intersec, shapely.geometry.Point):
                 intersec = shapely.geometry.LineString()  # empty geometry
             intersec = try_linemerge(intersec)
+            intersec = split_intersec(intersec, [border.geometry, other.geometry])
             border.geometry = create_multi_string(intersec, border.geometry.difference(intersec))
             other.geometry = create_multi_string(intersec, other.geometry.difference(intersec))
     return borders
-
 
 class FeatureToOsm:
     __log = logging.getLogger(__name__)
@@ -212,12 +235,15 @@ class FeatureToOsm:
                 ET.SubElement(way, "nd", {'ref': str(node)})
             return current_id
 
-        if geojson['type'] == 'Polygon' or geojson['type'] == 'LineString':
-            coords = geojson['coordinates']
+        if geojson['type'] == 'Polygon':
+            coords = geojson['coordinates']  # use outer coordinates
             outer.append(algo(coords[0]))
             if len(coords) > 1:
                 for way in coords[1:]:
                     inner.append(algo(way))
+        elif geojson['type'] == 'LineString':
+            coords = geojson['coordinates']
+            outer.append(algo(coords))
         elif geojson['type'] == 'MultiLineString':
             outer.extend(algo(x) for x in geojson['coordinates'])
 
