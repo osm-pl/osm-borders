@@ -1,6 +1,7 @@
 import logging
 
 from flask import Flask, make_response as _make_response
+from xml.sax.saxutils import quoteattr
 
 import borders.borders
 
@@ -27,10 +28,9 @@ def report_exception(e):
         """<?xml version='1.0' encoding='UTF-8'?>
         <osm version="0.6" generator="import adresy merger.py">
             <node id="-1" lon="19" lat="52">
-                <tag k="fixme" v="%s" />
-            </node><
-        /osm>""" % repr(
-            e), 200)
+                <tag k="fixme" v=%s />
+            </node>
+        </osm>""" % quoteattr(repr(e)), 200)
 
 
 if __name__ == '__main__':
