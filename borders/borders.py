@@ -173,7 +173,7 @@ def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
             if isinstance(intersec, shapely.geometry.GeometryCollection):
                 intersec = shapely.ops.cascaded_union(
                     [x for x in intersec.geoms if not isinstance(x, shapely.geometry.Point)])
-            if isinstance(intersec, shapely.geometry.Point):
+            if isinstance(intersec, (shapely.geometry.Point, shapely.geometry.MultiPoint)):
                 intersec = shapely.geometry.LineString()  # empty geometry
             intersec = try_linemerge(intersec)
             intersec = split_intersec(intersec, [border.geometry, other.geometry])
