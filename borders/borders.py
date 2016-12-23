@@ -56,7 +56,7 @@ def divide_bbox(bbox):
         ]
 
 
-@cachetools.func.ttl_cache(maxsize=128, ttl=600)
+@cachetools.func.ttl_cache(maxsize=128, ttl=24 * 3600)
 def fetch_from_emuia_cached(bbox):
     resp = requests.get("http://emuia1.gugik.gov.pl/wmsproxy/emuia/wms",
                         params={
