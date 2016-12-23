@@ -90,15 +90,20 @@ def get_borders(terc: str):
 
 
 __TAG_MAPPING = {
-    'NAZWA': 'name',
-    'ZRODLO_GEOMETRII': 'source:geometry',
-    'TERYT_MIEJSCOWOSCI': 'teryt:simc',
+    "relation": {
+        'NAZWA': 'name',
+        'TERYT_MIEJSCOWOSCI': 'teryt:simc'},
+    "way": {
+        'ZRODLO_GEOMETRII': 'source:geometry',
+    }
 }
 
 __DEFAULT_TAGS = {
-    'admin_level': 'TODO',
-    'boundary': 'administrative',
-    'type': 'boundary'
+    "relation": {
+        'admin_level': 'TODO',
+        'boundary': 'administrative',
+        'type': 'boundary'
+    }
 }
 
 def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[Feature]):
@@ -181,10 +186,14 @@ def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
             other.geometry = create_multi_string(intersec, other.geometry.difference(intersec))
     return borders
 
+
+TAG_MAPPING_TYPE = typing.Dict[str, typing.Dict[str, str]]
 class FeatureToOsm:
     __log = logging.getLogger(__name__)
+    __allowed_mapping_types = {"relation", "way", "node"}
 
-    def __init__(self, borders, tag_mapping: dict = None, default_tags: dict = None, tag_default_prefix: str = ""):
+    def __init__(self, borders, tag_mapping: TAG_MAPPING_TYPE = None, default_tags: TAG_MAPPING_TYPE = None,
+                 tag_default_prefix: str = ""):
         self.__object_store = {
             'way': {},
             'point': {},
@@ -192,7 +201,13 @@ class FeatureToOsm:
         }
         self.id_ = itertools.count(-1, -1)
         self.borders = borders
+        if not set(tag_mapping.keys()).issubset(self.__allowed_mapping_types):
+            raise ValueError("Unknown mapping for types: {0}".format(
+                ", ".join(set(tag_mapping).difference(self.__allowed_mapping_types))))
         self.tag_mapping = tag_mapping if tag_mapping else {}
+        if not set(default_tags.keys()).issubset(self.__allowed_mapping_types):
+            raise ValueError("Unknown mapping for types: {0}".format(
+                ", ".join(set(default_tags).difference(self.__allowed_mapping_types))))
         self.default_tags = default_tags if default_tags else {}
         self.tag_default_prefix = tag_default_prefix
 
@@ -206,11 +221,13 @@ class FeatureToOsm:
         self.__log.debug("Dumping relation: {0}".format(border))
         rel = ET.SubElement(tree, "relation", {'id': str(next(self.id_))})
         (outer, inner) = self.dump_ways(tree, border)
-        for key, value in self.default_tags.items():
+        for key, value in self.default_tags.get("relation", {}).items():
             ET.SubElement(rel, "tag", {'k': key, 'v': value})
 
         for key, value in border.tags.items():
-            ET.SubElement(rel, "tag", {'k': self.tag_mapping.get(key, self.tag_default_prefix + key), 'v': value})
+            ET.SubElement(rel, "tag",
+                          {'k': self.tag_mapping.get("relation", {}).get(key, self.tag_default_prefix + key),
+                           'v': value})
 
         for way in outer:
             ET.SubElement(rel, 'member', {'ref': str(way), 'role': 'outer', 'type': 'way'})
@@ -223,7 +240,7 @@ class FeatureToOsm:
         inner = []
         geojson = shapely.geometry.mapping(border.geometry)
 
-        def algo(way):
+        def algo(way: typing.List[typing.Tuple[float, float]]):
             cached_way = self.__object_store['way'].get(way)
             if cached_way:
                 return cached_way
@@ -231,6 +248,10 @@ class FeatureToOsm:
             current_id = next(self.id_)
             self.__object_store['way'][way] = current_id
             way = ET.SubElement(tree, "way", {'id': str(current_id)})
+            for key, value in self.default_tags.get("way", {}).items():
+                ET.SubElement(way, "tag", {'k': key, 'v': value})
+            for key, value in self.tag_mapping.get("way", {}).items():
+                ET.SubElement(way, "tag", {'k': value, 'v': border.tags[key]})
             for node in nodes:
                 ET.SubElement(way, "nd", {'ref': str(node)})
             return current_id
@@ -266,6 +287,8 @@ class FeatureToOsm:
             else:
                 current_id = next(self.id_)
                 self.__object_store['point'][point] = current_id
-                ET.SubElement(tree, "node", {'id': str(current_id), 'lon': str(point[0]), 'lat': str(point[1])})
+                node = ET.SubElement(tree, "node", {'id': str(current_id), 'lon': str(point[0]), 'lat': str(point[1])})
+                for key, value in self.default_tags.get("node", {}).items():
+                    ET.SubElement(node, "tag", {'k': key, 'v': value})
             rv.append(current_id)
         return rv
