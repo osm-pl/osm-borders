@@ -91,7 +91,7 @@ def get_borders(terc: str):
 
 __TAG_MAPPING = {
     'NAZWA': 'name',
-    'ZRODLO_GEOMETRII': 'source:geomtery',
+    'ZRODLO_GEOMETRII': 'source:geometry',
     'TERYT_MIEJSCOWOSCI': 'teryt:simc',
 }
 
