@@ -107,10 +107,17 @@ __DEFAULT_TAGS = {
 }
 
 def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[Feature]):
-    adm_bound = adm_bound.buffer(0.001)  # ~ 100m along meridian
+    adm_bound = adm_bound.buffer(0.01)  # ~ 1000m along meridian
 
     def valid_border(x):
-        return x.geometry.within(adm_bound) and (x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)
+        rv = x.geometry.within(adm_bound) and (x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)
+        if not rv:
+            msg = ", ".join("{0}: {1}".format(key, x.tags[key]) for key in sorted(x.tags.keys()))
+            if x.geometry.within(adm_bound):
+                __log.debug("Removing border as it is outside working set: {0}".format(msg))
+            else:
+                __log.debug("Removing outdated border: {0}".format(msg))
+        return rv
 
     # __log.debug("Names before dedup: {0}".format(", ".join(sorted(x.tags['NAZWA'] for x in borders))))
     __log.debug("Names before dedup: {0}".format(len([x.tags['NAZWA'] for x in borders])))
