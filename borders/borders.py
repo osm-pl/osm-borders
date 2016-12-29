@@ -107,7 +107,7 @@ __DEFAULT_TAGS = {
 }
 
 def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[Feature]):
-    adm_bound = adm_bound.buffer(0.050)  # ~ 500m along meridian
+    adm_bound = adm_bound.buffer(0.005)  # ~ 500m along meridian
 
     def valid_border(x):
         rv = x.geometry.intersects(adm_bound) and (
