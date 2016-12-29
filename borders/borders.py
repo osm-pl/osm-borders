@@ -227,6 +227,8 @@ class FeatureToOsm:
         for border in split_by_common_ways(self.borders):
             if self.filter(border):
                 self.dump_relation(out_xml, border)
+            else:
+                self.__log.debug("Filter excluded border: {0}".format(border))
         return ET.tostring(out_xml, encoding='utf-8')
 
     def dump_relation(self, tree, border: Feature):
