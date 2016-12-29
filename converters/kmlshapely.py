@@ -36,9 +36,13 @@ def kml_to_shapely(data: str) -> Borders:
             map(lambda x: x.text, description.find_all('span', class_='atr-name')),
             map(lambda x: x.text, description.find_all('span', class_='atr-value'))
         ))
-        polygon = geo.find(ns + "Polygon")
-        outer = cascaded_union([ring_to_shape(x) for x in polygon.findall(ns + "outerBoundaryIs/" + ns + "LinearRing")])
-        inner = cascaded_union([ring_to_shape(x) for x in polygon.findall(ns + "innerBoundaryIs/" + ns + "LinearRing")])
+        outer = Polygon()
+        inner = Polygon()
+        for polygon in geo.findall(ns + "Polygon"):
+            outer = cascaded_union(
+                [ring_to_shape(x) for x in polygon.findall(ns + "outerBoundaryIs/" + ns + "LinearRing")] + [outer, ])
+            inner = cascaded_union(
+                [ring_to_shape(x) for x in polygon.findall(ns + "innerBoundaryIs/" + ns + "LinearRing")] + [inner, ])
         border = Feature(outer.difference(inner))
         border.set_tag('name', name)
         for key, value in tags.items():
