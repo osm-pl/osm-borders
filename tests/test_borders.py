@@ -27,6 +27,7 @@ class OverpyShapely(unittest.TestCase):
             f.write(ret)
         rv = overpy.Result.from_xml(ET.fromstring(ret))
         self.assertTrue(any(len([y for y in x.members if y.role == 'outer']) > 1 for x in rv.relations))
+        self.assertEqual(len(rv.get_relation_ids()), 4)
 
     def test_verify_no_cache_poison(self):
         # res = overpy.Overpass().query("[out:json];relation(3094349);out;>;out;")#.get_relation(3094349)

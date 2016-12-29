@@ -107,10 +107,11 @@ __DEFAULT_TAGS = {
 }
 
 def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[Feature]):
-    adm_bound = adm_bound.buffer(0.01)  # ~ 1000m along meridian
+    adm_bound = adm_bound.buffer(0.001)  # ~ 100m along meridian
 
     def valid_border(x):
-        rv = x.geometry.within(adm_bound) and (x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)
+        rv = x.geometry.intersects(adm_bound) and (
+        x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)
         if not rv:
             msg = ", ".join("{0}: {1}".format(key, x.tags[key]) for key in sorted(x.tags.keys()))
             if x.geometry.within(adm_bound):
@@ -129,7 +130,9 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
     for border in borders:
         border.geometry = border.geometry.boundary  # use LineStrings instead of Polygons
 
-    return FeatureToOsm(borders, __TAG_MAPPING, __DEFAULT_TAGS, 'emuia:').tostring()
+    converter = FeatureToOsm(borders, __TAG_MAPPING, __DEFAULT_TAGS, 'emuia:')
+    converter.filter = lambda x: x.geometry.within(adm_bound)
+    return converter.tostring()
 
 
 def try_linemerge(obj):
@@ -217,11 +220,13 @@ class FeatureToOsm:
                 ", ".join(set(default_tags).difference(self.__allowed_mapping_types))))
         self.default_tags = default_tags if default_tags else {}
         self.tag_default_prefix = tag_default_prefix
+        self.filter = lambda x: True
 
     def tostring(self):
         out_xml = ET.Element("osm", {'generator': 'osm-borders', 'version': '0.6'})
         for border in split_by_common_ways(self.borders):
-            self.dump_relation(out_xml, border)
+            if self.filter(border):
+                self.dump_relation(out_xml, border)
         return ET.tostring(out_xml, encoding='utf-8')
 
     def dump_relation(self, tree, border: Feature):
