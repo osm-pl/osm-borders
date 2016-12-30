@@ -11,8 +11,7 @@ import shapely.geometry
 import shapely.ops
 from overpy import Overpass
 
-from converters.feature import ImmutableFeature
-from converters.kmlshapely import Feature
+from converters.feature import ImmutableFeature, Feature
 from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
 
@@ -120,18 +119,30 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
                 __log.debug("Removing outdated border: {0}".format(msg))
         return rv
 
-    # __log.debug("Names before dedup: {0}".format(", ".join(sorted(x.tags['NAZWA'] for x in borders))))
-    __log.debug("Names before dedup: {0}".format(len([x.tags['NAZWA'] for x in borders])))
+    __log.debug("Names before dedup: {0}".format(len(borders)))
     borders = [im.to_feature() for im in set(ImmutableFeature(x) for x in borders if valid_border(x))]
-    # __log.debug("Names after  dedup: {0}".format(", ".join(sorted(x.tags['NAZWA'] for x in borders))))
-    __log.debug("Names after dedup: {0}".format(len([x.tags['NAZWA'] for x in borders])))
+    __log.debug("Names after dedup: {0}".format(len(borders)))
 
 
     for border in borders:
         border.geometry = border.geometry.boundary  # use LineStrings instead of Polygons
 
-    converter = FeatureToOsm(borders, __TAG_MAPPING, __DEFAULT_TAGS, 'emuia:')
-    converter.filter = lambda x: x.geometry.within(adm_bound)
+    def tag_mapping(obj_type: str, tags: typing.Dict[str, str]) -> typing.Generator[typing.Tuple[str, str], None, None]:
+        if obj_type == "relation":
+            yield ('boundary', 'administrative')
+            yield ('type', 'boundary')
+            yield ('admin_level', 'TODO')
+            yield ('name', tags['NAZWA'])
+            yield ('teryt:simc', tags['TERYT_MIEJSCOWOSCI'])
+            yield ('name:prefix', tags['RODZAJ'])
+        elif obj_type == "way":
+            yield ('source:geometry', tags['ZRODLO_GEOMETRII'])
+        elif obj_type == "node":
+            pass
+        else:
+            raise ValueError("Unknown object type: {0}".format(obj_type))
+
+    converter = FeatureToOsm(borders, tag_mapping, lambda x: x.geometry.within(adm_bound))
     return converter.tostring()
 
 
@@ -197,13 +208,14 @@ def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
     return borders
 
 
-TAG_MAPPING_TYPE = typing.Dict[str, typing.Dict[str, str]]
 class FeatureToOsm:
     __log = logging.getLogger(__name__)
-    __allowed_mapping_types = {"relation", "way", "node"}
 
-    def __init__(self, borders, tag_mapping: TAG_MAPPING_TYPE = None, default_tags: TAG_MAPPING_TYPE = None,
-                 tag_default_prefix: str = ""):
+    def __init__(self,
+                 borders: typing.List[Feature],
+                 tag_mapping: typing.Callable[[str, typing.Dict[str, str]], typing.Generator] = lambda x, y: y,
+                 filter: typing.Callable[[Feature], bool] = lambda x: True
+                 ):
         self.__object_store = {
             'way': {},
             'point': {},
@@ -211,16 +223,8 @@ class FeatureToOsm:
         }
         self.id_ = itertools.count(-1, -1)
         self.borders = borders
-        if not set(tag_mapping.keys()).issubset(self.__allowed_mapping_types):
-            raise ValueError("Unknown mapping for types: {0}".format(
-                ", ".join(set(tag_mapping).difference(self.__allowed_mapping_types))))
-        self.tag_mapping = tag_mapping if tag_mapping else {}
-        if not set(default_tags.keys()).issubset(self.__allowed_mapping_types):
-            raise ValueError("Unknown mapping for types: {0}".format(
-                ", ".join(set(default_tags).difference(self.__allowed_mapping_types))))
-        self.default_tags = default_tags if default_tags else {}
-        self.tag_default_prefix = tag_default_prefix
-        self.filter = lambda x: True
+        self.tag_mapping = tag_mapping
+        self.filter = filter
 
     def tostring(self):
         out_xml = ET.Element("osm", {'generator': 'osm-borders', 'version': '0.6'})
@@ -235,12 +239,12 @@ class FeatureToOsm:
         self.__log.debug("Dumping relation: {0}".format(border))
         rel = ET.SubElement(tree, "relation", {'id': str(next(self.id_))})
         (outer, inner) = self.dump_ways(tree, border)
-        for key, value in self.default_tags.get("relation", {}).items():
-            ET.SubElement(rel, "tag", {'k': key, 'v': value})
 
-        for key, value in border.tags.items():
+        # false positive
+        # noinspection PyTypeChecker
+        for key, value in self.tag_mapping("relation", border.tags):
             ET.SubElement(rel, "tag",
-                          {'k': self.tag_mapping.get("relation", {}).get(key, self.tag_default_prefix + key),
+                          {'k': key,
                            'v': value})
 
         for way in outer:
@@ -258,14 +262,15 @@ class FeatureToOsm:
             cached_way = self.__object_store['way'].get(way)
             if cached_way:
                 return cached_way
-            nodes = self.dump_points(tree, way)
+            nodes = self.dump_points(tree, way, border.tags)
             current_id = next(self.id_)
             self.__object_store['way'][way] = current_id
             way = ET.SubElement(tree, "way", {'id': str(current_id)})
-            for key, value in self.default_tags.get("way", {}).items():
+
+            # false positive
+            # noinspection PyTypeChecker
+            for key, value in self.tag_mapping("way", border.tags):
                 ET.SubElement(way, "tag", {'k': key, 'v': value})
-            for key, value in self.tag_mapping.get("way", {}).items():
-                ET.SubElement(way, "tag", {'k': value, 'v': border.tags[key]})
             for node in nodes:
                 ET.SubElement(way, "nd", {'ref': str(node)})
             return current_id
@@ -292,7 +297,7 @@ class FeatureToOsm:
             raise ValueError("Unkown GeoJSON Type found: {0}".format(geojson['type']))
         return outer, inner
 
-    def dump_points(self, tree, points: list) -> typing.List[int]:
+    def dump_points(self, tree, points: list, tags: dict) -> typing.List[int]:
         rv = []
         for point in points:
             cached_point = self.__object_store['point'].get(point)
@@ -302,7 +307,9 @@ class FeatureToOsm:
                 current_id = next(self.id_)
                 self.__object_store['point'][point] = current_id
                 node = ET.SubElement(tree, "node", {'id': str(current_id), 'lon': str(point[0]), 'lat': str(point[1])})
-                for key, value in self.default_tags.get("node", {}).items():
+                # false positive
+                # noinspection PyTypeChecker
+                for key, value in self.tag_mapping("node", tags):
                     ET.SubElement(node, "tag", {'k': key, 'v': value})
             rv.append(current_id)
         return rv
