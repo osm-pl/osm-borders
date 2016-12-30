@@ -169,7 +169,7 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
             yield ('admin_level', tags['admin_level'])
             yield ('name', tags['NAZWA'])
             yield ('teryt:simc', tags['TERYT_MIEJSCOWOSCI'])
-            yield ('name:prefix', tags['RODZAJ'])
+            yield ('name:prefix', tags['RODZAJ'].lower())
             if 'fixme' in tags:
                 yield ('fixme', tags['fixme'])
         elif obj_type == "way":
