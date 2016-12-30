@@ -14,6 +14,7 @@ from overpy import Overpass
 from converters.feature import ImmutableFeature, Feature
 from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
+from converters.teryt import simc as SIMC_DICT
 
 __log = logging.getLogger(__name__)
 
@@ -88,25 +89,57 @@ def get_borders(terc: str):
     return process(adm_bound, borders)
 
 
-__TAG_MAPPING = {
-    "relation": {
-        'NAZWA': 'name',
-        'TERYT_MIEJSCOWOSCI': 'teryt:simc'},
-    "way": {
-        'ZRODLO_GEOMETRII': 'source:geometry',
-    }
-}
+def clean_borders(borders: typing.List[Feature]):
+    for border in borders:
+        simc_code = border.tags.get('TERYT_MIEJSCOWOSCI')
+        parent_id = border.tags.get('IDENTYFIKATOR_NADRZEDNEJ')
+        emuia_level = 9 if parent_id else 8
 
-__DEFAULT_TAGS = {
-    "relation": {
-        'admin_level': 'TODO',
-        'boundary': 'administrative',
-        'type': 'boundary'
-    }
-}
+        simc_entry = SIMC_DICT.get(simc_code)
+        if not simc_entry:
+            __log.error(
+                "No entry in TERYT dictionary for SIMC: {0}, name: {1}".format(simc_code, border.tags.get('NAZWA')))
+            border.tags['admin_level'] = str(emuia_level)
+            border.tags['fixme'] = "No entry in TERYT for this SIMC"
+            continue
+        simc_level = 9 if simc_entry.parent else 8
+
+        fixme = []
+        level = simc_level
+
+        if emuia_level == 9 and simc_level == 9:
+            # verify that they have the same parent
+            parent_border = [x for x in borders if x.tags.get('IDENTYFIKATOR_MIEJSCOWOSCI') == parent_id][0]
+            if simc_entry.parent != parent_border.tags.get('TERYT_MIEJSCOWOSCI'):
+                fixme.append("Different parents. In EMUiA it is teryt:simc: {0}, name: {1}".format(
+                    simc_entry.parent,
+                    SIMC_DICT[simc_entry.parent].nazwa))
+
+        if emuia_level == 9 and simc_level == 8:
+            # raise the border level to admin_level 8
+            parent_border = [x for x in borders if x.tags.get('IDENTYFIKATOR_MIEJSCOWOSCI') == parent_id][0]
+            new_geo = parent_border.geometry.difference(border.geometry)
+            if not new_geo.is_empty:
+                parent_border.geometry = new_geo
+            fixme.append("EMUiA points teryt:terc {0}, name: {1} as parent. In TERC this is standalone".format(
+                parent_border.tags.get('TERYT_MIEJSCOWOSCI'),
+                parent_border.tags.get('NAZWA')
+            ))
+
+        if emuia_level == 8 and simc_level == 9:
+            fixme.append("TERC points this as part of teryt:terc={0}, name={1}".format(
+                simc_entry.parent,
+                SIMC_DICT[simc_entry.parent].nazwa
+            ))
+            level = emuia_level
+
+        border.tags['admin_level'] = str(level)
+        if fixme:
+            border.tags['fixme'] = ", ".join(fixme)
+
 
 def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[Feature]):
-    adm_bound = adm_bound.buffer(0.050)  # ~ 500m along meridian
+    adm_bound = adm_bound.buffer(0.005)  # ~ 500m along meridian
 
     def valid_border(x):
         rv = x.geometry.intersects(adm_bound) and (
@@ -123,6 +156,7 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
     borders = [im.to_feature() for im in set(ImmutableFeature(x) for x in borders if valid_border(x))]
     __log.debug("Names after dedup: {0}".format(len(borders)))
 
+    clean_borders(borders)
 
     for border in borders:
         border.geometry = border.geometry.boundary  # use LineStrings instead of Polygons
@@ -131,10 +165,13 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
         if obj_type == "relation":
             yield ('boundary', 'administrative')
             yield ('type', 'boundary')
-            yield ('admin_level', 'TODO')
+            yield ('source:generator', 'osm-borders.py')
+            yield ('admin_level', tags['admin_level'])
             yield ('name', tags['NAZWA'])
             yield ('teryt:simc', tags['TERYT_MIEJSCOWOSCI'])
             yield ('name:prefix', tags['RODZAJ'])
+            if 'fixme' in tags:
+                yield ('fixme', tags['fixme'])
         elif obj_type == "way":
             yield ('source:geometry', tags['ZRODLO_GEOMETRII'])
         elif obj_type == "node":
