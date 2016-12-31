@@ -731,4 +731,4 @@ class OverpyShapely(unittest.TestCase):
             f.write(ret)
         rv = overpy.Result.from_xml(ret.decode('utf-8'))
         rel = [x for x in rv.relations if x.tags.get('name') == 'Pelnik'][0]
-        self.assertTrue(len(rel.members) < 100)
+        self.assertTrue(len(rel.members) < 10)
