@@ -93,7 +93,7 @@ def clean_borders(borders: typing.List[Feature]):
     for border in borders:
         simc_code = border.tags.get('TERYT_MIEJSCOWOSCI')
         parent_id = border.tags.get('IDENTYFIKATOR_NADRZEDNEJ')
-        emuia_level = 9 if parent_id else 8
+        emuia_level = 10 if parent_id else 8
 
         simc_entry = SIMC_DICT.get(simc_code)
         if not simc_entry:
@@ -102,12 +102,12 @@ def clean_borders(borders: typing.List[Feature]):
             border.tags['admin_level'] = str(emuia_level)
             border.tags['fixme'] = "No entry in TERYT for this SIMC"
             continue
-        simc_level = 9 if simc_entry.parent else 8
+        simc_level = 10 if simc_entry.parent else 8
 
         fixme = []
         level = simc_level
 
-        if emuia_level == 9 and simc_level == 9:
+        if emuia_level == 10 and simc_level == 10:
             # verify that they have the same parent
             parent_border = [x for x in borders if x.tags.get('IDENTYFIKATOR_MIEJSCOWOSCI') == parent_id][0]
             if simc_entry.parent != parent_border.tags.get('TERYT_MIEJSCOWOSCI'):
@@ -115,7 +115,7 @@ def clean_borders(borders: typing.List[Feature]):
                     simc_entry.parent,
                     SIMC_DICT[simc_entry.parent].nazwa))
 
-        if emuia_level == 9 and simc_level == 8:
+        if emuia_level == 10 and simc_level == 8:
             # raise the border level to admin_level 8
             parent_border = [x for x in borders if x.tags.get('IDENTYFIKATOR_MIEJSCOWOSCI') == parent_id][0]
             new_geo = parent_border.geometry.difference(border.geometry)
@@ -126,7 +126,7 @@ def clean_borders(borders: typing.List[Feature]):
                 parent_border.tags.get('NAZWA')
             ))
 
-        if emuia_level == 8 and simc_level == 9:
+        if emuia_level == 8 and simc_level == 10:
             fixme.append("TERC points this as part of teryt:terc={0}, name={1}".format(
                 simc_entry.parent,
                 SIMC_DICT[simc_entry.parent].nazwa
