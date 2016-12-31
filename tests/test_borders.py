@@ -721,3 +721,14 @@ class OverpyShapely(unittest.TestCase):
         rv = borders.borders.split_intersec(intersec, [border, other])
         self.assertTrue(rv.symmetric_difference(intersec).is_empty)
 
+    def test_for_small_lines(self):
+        with open("2815042.json") as f:
+            res = overpy.Result.from_json(json.load(f))
+        with open("2815042.kml") as f:
+            obj = kml_to_shapely(f.read())
+            ret = borders.borders.process(OverToShape(res).get_relation_feature().geometry, obj)
+        with open("../out.osm", "wb+") as f:
+            f.write(ret)
+        rv = overpy.Result.from_xml(ret.decode('utf-8'))
+        rel = [x for x in rv.relations if x.tags.get('name') == 'Pelnik'][0]
+        self.assertTrue(len(rel.members) < 100)
