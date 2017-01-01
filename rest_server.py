@@ -1,6 +1,7 @@
 import logging
 
 from flask import Flask, make_response as _make_response
+from flask import request
 from xml.sax.saxutils import quoteattr
 
 import borders.borders
@@ -23,7 +24,7 @@ def get_borders(terc):
 
 @app.errorhandler(Exception)
 def report_exception(e):
-    app.logger.error(e, exc_info=(type(e), e, e.__traceback__))
+    app.logger.error('{0}: {1}'.format(request.path, e), exc_info=(type(e), e, e.__traceback__))
     return make_response(
         """<?xml version='1.0' encoding='UTF-8'?>
         <osm version="0.6" generator="import adresy merger.py">
