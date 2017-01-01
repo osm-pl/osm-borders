@@ -11,6 +11,7 @@ import shapely.geometry
 import shapely.ops
 from overpy import Overpass
 
+from borders.geoutils import split_by_common_ways
 from converters.feature import ImmutableFeature, Feature
 from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
@@ -37,7 +38,10 @@ out bb;
     return OverToShape(result).get_relation_feature()
 
 
-def divide_bbox(bbox):
+TYPE_BBOX = typing.Tuple[float, float, float, float]
+
+
+def divide_bbox(bbox: TYPE_BBOX) -> typing.List[TYPE_BBOX]:
     (minx, miny, maxx, maxy) = bbox
     # EPSG:2180
     # __MAX_BBOX_X = 20000
@@ -57,7 +61,7 @@ def divide_bbox(bbox):
 
 
 @cachetools.func.ttl_cache(maxsize=128, ttl=24 * 3600)
-def fetch_from_emuia_cached(bbox):
+def fetch_from_emuia_cached(bbox: TYPE_BBOX) -> str:
     resp = requests.get("http://emuia1.gugik.gov.pl/wmsproxy/emuia/wms",
                         params={
                             "FORMAT": "application/vnd.google-earth.kml+xml",
@@ -77,19 +81,24 @@ def fetch_from_emuia_cached(bbox):
     return resp.text
 
 
-def fetch_from_emuia(bbox):
+def fetch_from_emuia(bbox: TYPE_BBOX) -> typing.List[Feature]:
     return kml_to_shapely(fetch_from_emuia_cached(bbox))
 
 
-def get_borders(terc: str):
+def get_borders(terc: str,
+                filter:  typing.Callable[[Feature, ], bool] = lambda x: True,
+                borders_mapping: typing.Callable[[typing.List[Feature], ], typing.List[Feature]] = split_by_common_ways) -> bytes:
     adm_bound = get_adm_border(terc).geometry
     borders = []
     for bbox in divide_bbox(adm_bound.bounds):  # area we need to fetch from EMUiA
         borders.extend(fetch_from_emuia(bbox))
-    return process(adm_bound, borders)
+    return process(adm_bound = adm_bound,
+                   borders = borders,
+                   filter = filter,
+                   borders_mapping = borders_mapping)
 
 
-def clean_borders(borders: typing.List[Feature]):
+def clean_borders(borders: typing.List[Feature]) -> None:
     for border in borders:
         simc_code = border.tags.get('TERYT_MIEJSCOWOSCI')
         parent_id = border.tags.get('IDENTYFIKATOR_NADRZEDNEJ')
@@ -141,7 +150,19 @@ def clean_borders(borders: typing.List[Feature]):
             border.tags['fixme'] = ", ".join(fixme)
 
 
-def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[Feature]):
+def process(adm_bound: shapely.geometry.base.BaseGeometry,
+            borders: typing.List[Feature],
+            filter: typing.Callable[[Feature, ], bool] = lambda x: True,
+            borders_mapping: typing.Callable[[typing.List[Feature], ],
+                                             typing.List[Feature]] = split_by_common_ways) -> bytes:
+    """
+
+    :param adm_bound: shape of the area that one should work on
+    :param borders: list of features to process
+    :param filter: output filtering function
+    :param borders_mapping: function that converts all the features
+    :return:
+    """
     adm_bound = adm_bound.buffer(0.005)  # ~ 500m along meridian
 
     def valid_border(x):
@@ -182,70 +203,11 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry, borders: typing.List[
         else:
             raise ValueError("Unknown object type: {0}".format(obj_type))
 
-    converter = FeatureToOsm(borders, tag_mapping, lambda x: x.geometry.within(adm_bound))
+    converter = FeatureToOsm(borders = borders,
+                             tag_mapping= tag_mapping,
+                             filter = lambda x: x.geometry.within(adm_bound) and filter(x),
+                             borders_mapping = borders_mapping )
     return converter.tostring()
-
-
-def try_linemerge(obj):
-    if not obj.is_empty \
-            and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry) \
-            and len(obj) > 1 \
-            and not isinstance(obj, shapely.geometry.MultiPoint):
-        return shapely.ops.linemerge(
-            shapely.geometry.MultiLineString([x for x in obj if not isinstance(x, shapely.geometry.Point)]))
-    return obj
-
-
-def get_raw_geometries(obj: shapely.geometry.base.BaseGeometry) -> typing.List[shapely.geometry.base.BaseGeometry]:
-    if not obj.is_empty and isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
-        return [x for x in obj.geoms]
-    if obj.is_empty:
-        return []
-    return [obj, ]
-
-
-def create_multi_string(obj1, obj2):
-    geoms = []
-
-    geoms.extend(get_raw_geometries(obj1))
-    geoms.extend(get_raw_geometries(obj2))
-    return shapely.geometry.MultiLineString(geoms)
-
-
-def split_intersec(intersec, objs):
-    rv = intersec
-    for obj in objs:
-        if not isinstance(obj, shapely.geometry.base.BaseMultipartGeometry):
-            continue  # nothing to be done
-        for geom in obj.geoms:
-            small_intersec = try_linemerge(geom.intersection(intersec))
-            if geom.intersects(intersec) and not isinstance(small_intersec,
-                                                            (shapely.geometry.Point, shapely.geometry.MultiPoint)):
-                rest = get_raw_geometries(rv.difference(small_intersec))
-                if rest:
-                    rv = shapely.geometry.MultiLineString((*get_raw_geometries(small_intersec), *rest))
-    return rv
-
-
-def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
-    for border in borders:
-        for other in borders:
-            if border == other:
-                continue
-            __log.debug("Processing border ({0}, {1})".format(borders.index(border), borders.index(other)))
-            intersec = border.geometry.intersection(other.geometry)
-            if intersec.is_empty:
-                continue  # nothing will change anyway
-            if isinstance(intersec, shapely.geometry.GeometryCollection):
-                intersec = shapely.ops.cascaded_union(
-                    [x for x in intersec.geoms if not isinstance(x, shapely.geometry.Point)])
-            if isinstance(intersec, (shapely.geometry.Point, shapely.geometry.MultiPoint)):
-                intersec = shapely.geometry.LineString()  # empty geometry
-            intersec = try_linemerge(intersec)
-            intersec = split_intersec(intersec, [border.geometry, other.geometry])
-            border.geometry = create_multi_string(intersec, border.geometry.difference(intersec))
-            other.geometry = create_multi_string(intersec, other.geometry.difference(intersec))
-    return borders
 
 
 class FeatureToOsm:
@@ -254,7 +216,8 @@ class FeatureToOsm:
     def __init__(self,
                  borders: typing.List[Feature],
                  tag_mapping: typing.Callable[[str, typing.Dict[str, str]], typing.Generator] = lambda x, y: y,
-                 filter: typing.Callable[[Feature], bool] = lambda x: True
+                 filter: typing.Callable[[Feature], bool] = lambda x: True,
+                 borders_mapping: typing.Callable[[typing.List[Feature], ], typing.List[Feature]] = split_by_common_ways
                  ):
         self.__object_store = {
             'way': {},
@@ -265,17 +228,18 @@ class FeatureToOsm:
         self.borders = borders
         self.tag_mapping = tag_mapping
         self.filter = filter
+        self.borders_mapping = borders_mapping
 
-    def tostring(self):
+    def tostring(self) -> bytes:
         out_xml = ET.Element("osm", {'generator': 'osm-borders', 'version': '0.6'})
-        for border in split_by_common_ways(self.borders):
+        for border in self.borders_mapping(self.borders):
             if self.filter(border):
                 self.dump_relation(out_xml, border)
             else:
                 self.__log.debug("Filter excluded border: {0}".format(border))
         return ET.tostring(out_xml, encoding='utf-8')
 
-    def dump_relation(self, tree, border: Feature):
+    def dump_relation(self, tree, border: Feature) -> None:
         self.__log.debug("Dumping relation: {0}".format(border))
         rel = ET.SubElement(tree, "relation", {'id': str(next(self.id_))})
         (outer, inner) = self.dump_ways(tree, border)

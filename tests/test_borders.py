@@ -9,6 +9,7 @@ import shapely.geometry
 
 import borders.borders
 import converters.feature
+from borders.geoutils import split_intersec
 from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
 
@@ -25,9 +26,9 @@ class OverpyShapely(unittest.TestCase):
             ret = borders.borders.process(OverToShape(res).get_relation_feature().geometry, obj)
         with open("../out.osm", "wb+") as f:
             f.write(ret)
-        rv = overpy.Result.from_xml(ET.fromstring(ret))
+        rv = overpy.Result.from_xml(ret.decode('utf-8'))
         self.assertTrue(any(len([y for y in x.members if y.role == 'outer']) > 1 for x in rv.relations))
-        self.assertEqual(len(rv.get_relation_ids()), 5)
+        self.assertEqual(len(rv.get_relation_ids()), 4)
 
     def test_verify_no_cache_poison(self):
         # res = overpy.Overpass().query("[out:json];relation(3094349);out;>;out;")#.get_relation(3094349)
@@ -56,7 +57,7 @@ class OverpyShapely(unittest.TestCase):
         with open("../out.osm", "wb+") as f:
             f.write(ret)
 
-        rv = overpy.Result.from_xml(ET.fromstring(ret))
+        rv = overpy.Result.from_xml(ret.decode('utf-8'))
         inner_nodes = sorted(list(x.id for x in itertools.chain(*(way.nodes[1:-1] for way in rv.get_ways()))))
         dup_nodes = [x[0] for x in itertools.groupby(inner_nodes) if len(list(x[1])) > 1]
         self.assertEqual(len(dup_nodes), 0, "Duplicate nodes found: {0}".format(len(dup_nodes)))
@@ -72,7 +73,7 @@ class OverpyShapely(unittest.TestCase):
         with open("../out.osm", "wb+") as f:
             f.write(ret)
 
-        rv = overpy.Result.from_xml(ET.fromstring(ret))
+        rv = overpy.Result.from_xml(ret.decode('utf-8'))
         inner_nodes = sorted(list(x.id for x in itertools.chain(*(way.nodes[1:-1] for way in rv.get_ways()))))
         dup_nodes = [x[0] for x in itertools.groupby(inner_nodes) if len(list(x[1])) > 1]
         # allow for one dup node - actually it's ok for this data set
@@ -718,7 +719,7 @@ class OverpyShapely(unittest.TestCase):
                                                           [22.71098211, 52.61559898], [22.71015314, 52.61626215],
                                                           [22.71012653, 52.61628325], [22.71007285, 52.61632616]],
                                           "type": "LineString"})
-        rv = borders.borders.split_intersec(intersec, [border, other])
+        rv = split_intersec(intersec, [border, other])
         self.assertTrue(rv.symmetric_difference(intersec).is_empty)
 
     def test_for_small_lines(self):
@@ -731,4 +732,4 @@ class OverpyShapely(unittest.TestCase):
             f.write(ret)
         rv = overpy.Result.from_xml(ret.decode('utf-8'))
         rel = [x for x in rv.relations if x.tags.get('name') == 'Pelnik'][0]
-        self.assertTrue(len(rel.members) < 10)
+        self.assertLess(len(rel.members), 10)
