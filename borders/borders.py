@@ -109,11 +109,14 @@ def clean_borders(borders: typing.List[Feature]):
 
         if emuia_level == 10 and simc_level == 10:
             # verify that they have the same parent
-            parent_border = [x for x in borders if x.tags.get('IDENTYFIKATOR_MIEJSCOWOSCI') == parent_id][0]
-            if simc_entry.parent != parent_border.tags.get('TERYT_MIEJSCOWOSCI'):
-                fixme.append("Different parents. In EMUiA it is teryt:simc: {0}, name: {1}".format(
-                    simc_entry.parent,
-                    SIMC_DICT[simc_entry.parent].nazwa))
+            try:
+                parent_border = [x for x in borders if x.tags.get('IDENTYFIKATOR_MIEJSCOWOSCI') == parent_id][0]
+                if simc_entry.parent != parent_border.tags.get('TERYT_MIEJSCOWOSCI'):
+                    fixme.append("Different parents. In EMUiA it is teryt:simc: {0}, name: {1}".format(
+                        simc_entry.parent,
+                        SIMC_DICT[simc_entry.parent].nazwa))
+            except IndexError:
+                fixme.append("Missing parent border: {0}".format(parent_id))
 
         if emuia_level == 10 and simc_level == 8:
             # raise the border level to admin_level 8
