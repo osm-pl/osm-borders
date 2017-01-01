@@ -22,6 +22,10 @@ def get_borders(terc):
     return resp
 
 
+@app.route("/osm/granice/error<stuff>", methods=["GET", ])
+def error(stuff):
+    raise ValueError("Sample error")
+
 @app.errorhandler(Exception)
 def report_exception(e):
     app.logger.error('{0}: {1}'.format(request.path, e), exc_info=(type(e), e, e.__traceback__))
