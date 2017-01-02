@@ -2,12 +2,12 @@ import itertools
 import json
 import logging
 import unittest
-from xml.etree import ElementTree as ET
 
 import overpy
 import shapely.geometry
 
 import borders.borders
+import borders.geoutils
 import converters.feature
 from borders.geoutils import split_intersec
 from converters.kmlshapely import kml_to_shapely
@@ -532,7 +532,7 @@ class OverpyShapely(unittest.TestCase):
                                                              [22.75561602, 52.62597818], [22.75556603, 52.62600668]]})
 
         self.assertTrue(len(other_geo) == len(other_geo.difference(shapely.geometry.LineString())))
-        rv = borders.borders.create_multi_string(intersec, other_geo.difference(intersec))
+        rv = borders.geoutils.create_multi_string(intersec, other_geo.difference(intersec))
         for i in other_geo.geoms:
             print(json.dumps(shapely.geometry.mapping(i)))
         print("---")
