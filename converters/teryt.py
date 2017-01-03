@@ -3,6 +3,7 @@ import functools
 import io
 import logging
 import os
+import shelve
 import pickle
 import tempfile
 import threading
@@ -338,14 +339,14 @@ def _stored_dict(filename: str,
         }
     if data['time'] < time.time() - 180 * 24 * 60 * 60:
         new = fetcher()
-        data['dct'] = new
         data['time'] = time.time()
-        try:
-            with open(filename, "w+b") as f:
-                pickle.dump(data, f)
-        except:
-            __log.debug("Can't write file: %s", filename, exc_info=True)
-    return Dictionary(data['dct'])
+        with shelve.open(filename +'.shlv', flag='n') as dct:
+            dct.update(new)
+        with open(filename, 'wb') as f:
+            pickle.dump(data, f)
+
+    shlv = shelve.open(filename +'.shlv', flag='r')
+    return Dictionary(shlv)
 
 
 @functools.lru_cache()
