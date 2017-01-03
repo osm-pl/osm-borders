@@ -144,6 +144,12 @@ def clean_borders(borders: typing.List[Feature]) -> None:
                 SIMC_DICT[simc_entry.parent].nazwa
             ))
             level = emuia_level
+            try:
+                parent_border = [x for x in borders if x.tags.get('TERYT_MIEJSCOWOSCI') == simc_entry.parnet][0]
+                parent_border.geometry = parent_border.geometry.union(border.geometry)
+                level = simc_level
+            except IndexError:
+                fixme.append('Missing parnet border: {0}'.format(simc_entry.parent))
 
         border.tags['admin_level'] = str(level)
         if fixme:
