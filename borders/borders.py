@@ -108,8 +108,8 @@ def clean_borders(borders: typing.List[Feature]) -> None:
         if not simc_entry:
             __log.error(
                 "No entry in TERYT dictionary for SIMC: {0}, name: {1}".format(simc_code, border.tags.get('NAZWA')))
-            border.tags['admin_level'] = str(emuia_level)
-            border.tags['fixme'] = "No entry in TERYT for this SIMC"
+            border.tags['admin_level'] = 'TODO'
+            border.tags['fixme'] = "No entry in TERYT for this teryt:simc. EMUiA admin_level={0}".format(emuia_level)
             continue
         simc_level = 10 if simc_entry.parent else 8
 
