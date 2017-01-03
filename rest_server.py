@@ -1,4 +1,5 @@
 import logging
+import os
 
 from flask import Flask, make_response as _make_response
 from flask import request
@@ -63,4 +64,4 @@ if __name__ == '__main__':
                                    ADMINS, 'OSM Rest-Server Failed')
         mail_handler.setLevel(logging.INFO)
         app.logger.addHandler(mail_handler)
-    app.run(host='0.0.0.0', port=5002, debug=False)
+    app.run(host='0.0.0.0', port=5002, debug=os.environ.get('DEBUG', False))
