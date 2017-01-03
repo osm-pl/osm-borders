@@ -15,26 +15,26 @@ def make_response(ret, code):
     return resp
 
 
-@app.route("/osm/granice/all/<terc>.osm", methods=["GET", ])
+@app.route("all/<terc>.osm", methods=["GET", ])
 def get_all_borders(terc):
     resp = make_response(borders.borders.get_borders(terc), 200)
     resp.headers['Content-Disposition'] = 'attachment; filename={0}.osm'.format(terc)
     return resp
 
 
-@app.route("/osm/granice/nosplit/<terc>.osm", methods=["GET", ])
+@app.route("nosplit/<terc>.osm", methods=["GET", ])
 def get_nosplit_borders(terc):
     resp = make_response(borders.borders.get_borders(terc, borders_mapping=lambda x: x), 200)
     resp.headers['Content-Disposition'] = 'attachment; filename={0}.osm'.format(terc)
     return resp
 
 
-@app.route("/osm/granice/error<stuff>", methods=["GET", ])
+@app.route("error<stuff>", methods=["GET", ])
 def error(stuff):
     raise ValueError("Sample error")
 
 
-@app.route("/osm/granice/<terc>.osm", methods=["GET", ])
+@app.route("<terc>.osm", methods=["GET", ])
 def get_lvl8_borders(terc):
     resp = make_response(borders.borders.get_borders(terc, lambda x: x.tags.get('admin_level') == "8"), 200)
     resp.headers['Content-Disposition'] = 'attachment; filename={0}.osm'.format(terc)
