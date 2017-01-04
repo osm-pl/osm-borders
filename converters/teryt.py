@@ -283,6 +283,9 @@ class Dictionary(typing.Generic[TYPE_DICT_ENTRIES]):
         self.dct = dct
 
     def __getitem__(self, item: str) -> TYPE_DICT_ENTRIES:
+        if not item:
+            # ignore NoneType keys
+            return None
         return self.dct[item]
 
     def get(self, item) -> TYPE_DICT_ENTRIES:
