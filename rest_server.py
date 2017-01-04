@@ -57,10 +57,10 @@ def report_exception(e):
 if __name__ == '__main__':
     ADMINS = ['logi-osm@vink.pl']
     DEBUG = bool(os.environ.get('DEBUG', False))
-    print("Debug mode: {0}".format(DEBUG))
-    MAILLOG = bool(os.environ.get('MAILLOG', True))
+    os.sys.stderr.write("Debug mode: {0}\n".format(DEBUG))
+    MAILLOG = bool(os.environ.get('MAILLOG', False))
     MAILHOST = os.environ.get('MAILHOST', '127.0.0.1')
-    print("Mail logging mode: {0}. SMTP host: {1}".format(MAILLOG, MAILHOST))
+    os.sys.stderr.write("Mail logging mode: {0}. SMTP host: {1}\n".format(MAILLOG, MAILHOST))
     if MAILLOG:
         from logging.handlers import SMTPHandler
 
