@@ -42,7 +42,6 @@ def get_lvl8_borders(terc):
     return resp
 
 
-@app.errorhandler(Exception)
 def report_exception(e):
     app.logger.error('{0}: {1}'.format(request.path, e), exc_info=(type(e), e, e.__traceback__))
     return make_response(
@@ -69,4 +68,8 @@ if __name__ == '__main__':
                                    ADMINS, 'OSM Rest-Server Failed')
         mail_handler.setLevel(logging.INFO)
         app.logger.addHandler(mail_handler)
+
+    if not DEBUG:
+        report_exception = app.errorhandler(Exception)(report_exception)
+
     app.run(host='0.0.0.0', port=5002, debug=DEBUG)
