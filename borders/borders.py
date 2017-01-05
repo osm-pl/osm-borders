@@ -129,14 +129,17 @@ def clean_borders(borders: typing.List[Feature]) -> None:
 
         if emuia_level == 10 and simc_level == 8:
             # raise the border level to admin_level 8
-            parent_border = [x for x in borders if x.tags.get('IDENTYFIKATOR_MIEJSCOWOSCI') == parent_id][0]
-            new_geo = parent_border.geometry.difference(border.geometry)
-            if not new_geo.is_empty:
-                parent_border.geometry = new_geo
-            fixme.append("EMUiA points teryt:terc {0}, name: {1} as parent. In TERC this is standalone".format(
-                parent_border.tags.get('TERYT_MIEJSCOWOSCI'),
-                parent_border.tags.get('NAZWA')
-            ))
+            try:
+                parent_border = [x for x in borders if x.tags.get('IDENTYFIKATOR_MIEJSCOWOSCI') == parent_id][0]
+                new_geo = parent_border.geometry.difference(border.geometry)
+                if not new_geo.is_empty:
+                    parent_border.geometry = new_geo
+                fixme.append("EMUiA points teryt:terc {0}, name: {1} as parent. In TERC this is standalone".format(
+                    parent_border.tags.get('TERYT_MIEJSCOWOSCI'),
+                    parent_border.tags.get('NAZWA')
+                ))
+            except IndexError:
+                fixme.append("Missing parent border: {0}".format(parent_id))
 
         if emuia_level == 8 and simc_level == 10:
             fixme.append("TERC points this as part of teryt:terc={0}, name={1}".format(
