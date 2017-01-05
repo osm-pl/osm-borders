@@ -10,7 +10,7 @@ import shapely.wkt
 class WikidataSimcEntry:
     def __init__(self, dct):
         self._point = shapely.wkt.loads(dct['coords']['value'])
-        self._wikidata = dct['miejscowosc']['value']
+        self._wikidata = dct['miejscowosc']['value'].replace('http://www.wikidata.org/entity/', '')
         self._terc = dct['terc']['value']
         wikipedia = dct['article']['value']
         self._wikipedia = urllib.parse.unquote_plus(wikipedia.replace('https://pl.wikipedia.org/wiki/', ''))
