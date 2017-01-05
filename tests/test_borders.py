@@ -8,6 +8,7 @@ import shapely.geometry
 
 import borders.borders
 import borders.geoutils
+import borders.wikidata
 import converters.feature
 from borders.geoutils import split_intersec
 from converters.kmlshapely import kml_to_shapely
@@ -21,13 +22,16 @@ class OverpyShapely(unittest.TestCase):
         # res = overpy.Overpass().query("[out:json];relation(3094349);out;>;out;")#.get_relation(3094349)
         with open("example.json") as f:
             res = overpy.Result.from_json(json.load(f))
+        with open("example.wikidata") as f:
+            wikidata = borders.wikidata.from_json(f.read())
         with open("example.kml") as f:
             obj = kml_to_shapely(f.read())
-            ret = borders.borders.process(OverToShape(res).get_relation_feature().geometry, obj)
+            ret = borders.borders.process(OverToShape(res).get_relation_feature().geometry, obj, wikidata=wikidata)
         with open("../out.osm", "wb+") as f:
             f.write(ret)
         rv = overpy.Result.from_xml(ret.decode('utf-8'))
         self.assertTrue(any(len([y for y in x.members if y.role == 'outer']) > 1 for x in rv.relations))
+        self.assertTrue(all(('wikidata' in rel.tags) for rel in rv.relations), "Wikidata tag is on all relations")
         self.assertEqual(len(rv.get_relation_ids()), 4)
 
     def test_verify_no_cache_poison(self):
