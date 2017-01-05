@@ -12,6 +12,7 @@ import shapely.ops
 from overpy import Overpass
 
 from borders.geoutils import split_by_common_ways
+from borders.wikidata import fetch_from_wikidata, WikidataSimcEntry
 from converters.feature import ImmutableFeature, Feature
 from converters.kmlshapely import kml_to_shapely
 from converters.overpyshapely import OverToShape
@@ -92,10 +93,17 @@ def get_borders(terc: str,
     borders = []
     for bbox in divide_bbox(adm_bound.bounds):  # area we need to fetch from EMUiA
         borders.extend(fetch_from_emuia(bbox))
+    wikidata = []
+    try:
+        wikidata = fetch_from_wikidata(terc)
+    except Exception as e:
+        # ignore any exceptions
+        __log.warning("Exception during fetch from Wikidata: {0}", e, exc_info=(type(e), e, e.__traceback__))
     return process(adm_bound = adm_bound,
                    borders = borders,
                    filter = filter,
-                   borders_mapping = borders_mapping)
+                   borders_mapping=borders_mapping,
+                   wikidata=wikidata)
 
 
 def clean_borders(borders: typing.List[Feature]) -> None:
@@ -156,20 +164,70 @@ def clean_borders(borders: typing.List[Feature]) -> None:
             border.tags['fixme'] = ", ".join(fixme)
 
 
+def add_wikidata(wikidata: typing.List[WikidataSimcEntry], borders: typing.List[Feature]):
+    rest = list(wikidata)
+    todo = list(borders)
+    border_iter = itertools.cycle(todo)
+
+    def update_border(entry, border):
+        entry = candidates[0]
+        rest.remove(entry)
+        border.tags['wikidata'] = entry.wikidata
+        border.tags['wikipedia'] = entry.wikipedia
+        if not border.tags['NAZWA'] in entry.miejscowosc:
+            border.tags['fixme'] = "Check Wikipedia/Wikidata tags. In Wikipedia name is: {0}".format(
+                entry.miejscowosc)
+
+    loop_limit = 100
+
+    while todo and loop_limit > 0:
+        loop_limit -= 1
+        border = next(border_iter)
+        candidates = [x for x in rest if x.miejscowosc == border.tags['NAZWA']]
+        if len(candidates) <= 1:
+            if candidates:
+                update_border(candidates[0], border)
+                todo.remove(border)  # we will not need to process it again
+                border_iter = itertools.cycle(todo)
+            else:
+                # no candidates by geometry
+                candidates = [x for x in rest if
+                              x.point.within(border.geometry) and border.tags['NAZWA'] in x.miejscowosc]
+                if len(candidates) <= 1:
+                    if candidates:
+                        update_border(candidates[0], border)
+                        todo.remove(border)  # we will not need to process it again
+                        border_iter = itertools.cycle(todo)
+                    else:
+                        candidates = [x for x in rest if border.tags['NAZWA'] in x.miejscowosc]
+                        if len(candidates) <= 1:
+                            # no or one candidate by name and no candidate by geometry
+                            # remove so we will not process it again
+                            todo.remove(border)  # we will not need to process it again
+                            border_iter = itertools.cycle(todo)
+                            if candidates:
+                                update_border(candidates[0], border)
+
+
+
 def process(adm_bound: shapely.geometry.base.BaseGeometry,
             borders: typing.List[Feature],
             filter: typing.Callable[[Feature, ], bool] = lambda x: True,
             borders_mapping: typing.Callable[[typing.List[Feature], ],
-                                             typing.List[Feature]] = split_by_common_ways) -> bytes:
+                                             typing.List[Feature]] = split_by_common_ways,
+            wikidata: typing.List[WikidataSimcEntry] = None) -> bytes:
     """
 
     :param adm_bound: shape of the area that one should work on
     :param borders: list of features to process
     :param filter: output filtering function
     :param borders_mapping: function that converts all the features
+    :param wikidata: wikidata information for this municipiality
     :return:
     """
     adm_bound = adm_bound.buffer(0.005)  # ~ 500m along meridian
+    if not wikidata:
+        wikidata = []
 
     def valid_border(x):
         rv = x.geometry.intersects(adm_bound) and (
@@ -187,6 +245,7 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry,
     __log.debug("Names after dedup: {0}".format(len(borders)))
 
     clean_borders(borders)
+    add_wikidata(wikidata, borders)
 
     for border in borders:
         border.geometry = border.geometry.boundary  # use LineStrings instead of Polygons
@@ -200,8 +259,9 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry,
             yield ('name', tags['NAZWA'])
             yield ('teryt:simc', tags['TERYT_MIEJSCOWOSCI'])
             yield ('name:prefix', tags['RODZAJ'].lower())
-            if 'fixme' in tags:
-                yield ('fixme', tags['fixme'])
+            for key in ('wikidata', 'wikipedia', 'fixme'):
+                if key in tags:
+                    yield (key, tags[key])
         elif obj_type == "way":
             yield ('source:geometry', tags['ZRODLO_GEOMETRII'])
             yield ('boundary', 'administrative')

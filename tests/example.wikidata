@@ -1,0 +1,1331 @@
+{
+  "head" : {
+    "vars" : [ "miejscowosc", "miejscowoscLabel", "gmina", "terc", "article", "coords" ]
+  },
+  "results" : {
+    "bindings" : [ {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q7601352"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.693055555 52.577777777)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Kosianka%20Stara"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Kosianka Stara"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q6351816"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.67 52.608888888)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Krynki-Bia%C5%82okunki"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Krynki-Białokunki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q6432818"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.7333 52.65)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Koryciny%20%28powiat%20siemiatycki%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Koryciny (powiat siemiatycki)"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5741871"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.7167 52.5333)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Kamianki%20%28powiat%20siemiatycki%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Kamianki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5739529"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.7167 52.5833)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Kosianka%20Le%C5%9Bna"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Kosianka Leśna"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5738678"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.64722222 52.54333333)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Krak%C3%B3wki-D%C4%85bki"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Krakówki-Dąbki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5739076"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.746111111 52.549722222)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Niewiarowo-Sochy"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Niewiarowo-Sochy"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5741373"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.8322 52.5928)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Targowisk"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Targowisk"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5621210"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.3822 53.2714)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Kamianki%20%28powiat%20%C5%82om%C5%BCy%C5%84ski%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Kamianki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5619284"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.7667 52.5667)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Makarki"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Makarki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5619547"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.75888889 52.58833333)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Mierzyn%C3%B3wka"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Mierzynówka"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5620108"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.7333 52.5167)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Morze%20%28powiat%20siemiatycki%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Morze"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5738616"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.666111111 52.597222222)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/%C5%BBery-Czubiki"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Żery-Czubiki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5739641"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.666666666 52.594166666)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/%C5%BBery-Pilaki"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Żery-Pilaki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5742295"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.69083333 52.59138889)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Kosianka-Boruty"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Kosianka-Boruty"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5740866"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.75 52.6167)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Koz%C5%82owo%20%28wojew%C3%B3dztwo%20podlaskie%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Kozłowo"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5739661"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.780555555 52.535555555)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Krynki-Sobole"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Krynki-Sobole"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5738868"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.735833333 52.556388888)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Niewiarowo-Przybki"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Niewiarowo-Przybki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5738743"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.76666667 52.55)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Ryba%C5%82ty"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Rybałty"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5742362"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.72972222 52.61055556)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Porzeziny-Gi%C4%99tki"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Porzeziny-Giętki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5740119"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.7178 52.6014)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Porzeziny-Mendle"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Porzeziny-Mendle"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5738648"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.78333333 52.61666667)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Siemiony%20%28wojew%C3%B3dztwo%20podlaskie%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Siemiony"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5742056"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.692777777 52.615)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Stare%20Sypnie"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Stare Sypnie"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5739425"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.65 52.5667)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/%C5%BBale"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Żale"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5740869"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.65 52.6167)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/%C5%BBery%20Bystre"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Żery Bystre"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5739728"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.7014 52.5929)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Kosianka-Trojan%C3%B3wka"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Kosianka-Trojanówka"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5740145"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.69194444 52.61833333)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Sypnie%20Nowe"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Sypnie Nowe"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q6164405"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.6667 52.5333)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Jaszczo%C5%82ty"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Jaszczołty"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q646213"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.6725 52.573888888)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Bogusze%20Stare"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Stare Bogusze"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q658103"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.86555556 52.58666667)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Dobrogoszcz%20%28wojew%C3%B3dztwo%20podlaskie%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Dobrogoszcz"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q673515"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.7167 52.5333)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Stadniki%20%28wojew%C3%B3dztwo%20podlaskie%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Stadniki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2248420"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(21.8716 52.1608)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Grodziszcze%20Mazowieckie"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Grodziszcze Mazowieckie"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q4715636"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.8 52.5667)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Aleksandrowo%20%28powiat%20siemiatycki%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Aleksandrowo (powiat siemiatycki)"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q4937877"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.684444444 52.576388888)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Bogusze-Litewka"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Bogusze-Litewka"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5618635"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.733055555 52.528611111)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Lubowicze"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Lubowicze"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q572002"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.7167 52.6667)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Ma%C5%82yszczyn"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Małyszczyn"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q954155"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.65722222 52.54583333)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Krak%C3%B3wki-W%C5%82odki"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Krakówki-Włodki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q4918649"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.81666667 52.55)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Biszewo"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Biszewo"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5201563"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.83333333 52.56666667)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Czarna%20Wielka"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Czarna Wielka"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5308170"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.701944444 52.566944444)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Drochlin%20%28wojew%C3%B3dztwo%20podlaskie%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Drochlin (województwo podlaskie)"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5617297"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.653055555 52.619722222)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Krynki-Jarki"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Krynki-Jarki"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q603422"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.73333 52.58333)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Grodzisk%20%28powiat%20siemiatycki%29"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Grodzisk"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2456373"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.69222 52.60278)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Krynki%20Borowe"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Krynki Borowe"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5303909"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.836944444 52.6175)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Do%C5%82ubowo-Wyr%C4%99by"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Dołubowo-Wyręby"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2626645"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.65111 52.54889)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Krak%C3%B3wki-Zdzichy"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Krakówki-Zdzichy"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q4507430"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.8075 52.603055555)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Czarna%20%C5%9Arednia"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Czarna Średnia"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5201459"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.7058 52.6625)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Czaje"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Czaje"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5201549"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.8 52.61666667)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Czarna%20Cerkiewna"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Czarna Cerkiewna"
+      }
+    }, {
+      "gmina" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q2020448"
+      },
+      "terc" : {
+        "type" : "literal",
+        "value" : "2010042"
+      },
+      "miejscowosc" : {
+        "type" : "uri",
+        "value" : "http://www.wikidata.org/entity/Q5618100"
+      },
+      "coords" : {
+        "datatype" : "http://www.opengis.net/ont/geosparql#wktLiteral",
+        "type" : "literal",
+        "value" : "Point(22.65166667 52.61916667)"
+      },
+      "article" : {
+        "type" : "uri",
+        "value" : "https://pl.wikipedia.org/wiki/Krynki-Miklasy"
+      },
+      "miejscowoscLabel" : {
+        "xml:lang" : "pl",
+        "type" : "literal",
+        "value" : "Krynki-Miklasy"
+      }
+    } ]
+  }
+}
