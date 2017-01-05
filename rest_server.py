@@ -42,7 +42,6 @@ def get_lvl8_borders(terc):
     return resp
 
 
-@app.errorhandler(Exception)
 def report_exception(e):
     app.logger.error('{0}: {1}'.format(request.path, e), exc_info=(type(e), e, e.__traceback__))
     return make_response(
@@ -56,12 +55,21 @@ def report_exception(e):
 
 if __name__ == '__main__':
     ADMINS = ['logi-osm@vink.pl']
-    if not app.debug:
+    DEBUG = bool(os.environ.get('DEBUG', False))
+    os.sys.stderr.write("Debug mode: {0}\n".format(DEBUG))
+    MAILLOG = bool(os.environ.get('MAILLOG', False))
+    MAILHOST = os.environ.get('MAILHOST', '127.0.0.1')
+    os.sys.stderr.write("Mail logging mode: {0}. SMTP host: {1}\n".format(MAILLOG, MAILHOST))
+    if MAILLOG:
         from logging.handlers import SMTPHandler
 
-        mail_handler = SMTPHandler('127.0.0.1',
+        mail_handler = SMTPHandler(MAILHOST,
                                    'server-error@vink.pl',
                                    ADMINS, 'OSM Rest-Server Failed')
         mail_handler.setLevel(logging.INFO)
         app.logger.addHandler(mail_handler)
-    app.run(host='0.0.0.0', port=5002, debug=bool(os.environ.get('DEBUG', False)))
+
+    if not DEBUG:
+        report_exception = app.errorhandler(Exception)(report_exception)
+
+    app.run(host='0.0.0.0', port=5002, debug=DEBUG)
