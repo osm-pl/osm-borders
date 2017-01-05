@@ -204,6 +204,7 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry,
                 yield ('fixme', tags['fixme'])
         elif obj_type == "way":
             yield ('source:geometry', tags['ZRODLO_GEOMETRII'])
+            yield ('boundary', 'administrative')
         elif obj_type == "node":
             pass
         else:
