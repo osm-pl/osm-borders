@@ -42,6 +42,13 @@ def get_lvl8_borders(terc):
     return resp
 
 
+@app.route("/prg/gminy/<terc>.osm", methods=["GET", ])
+def get_gminy(terc):
+    resp = make_response(borders.borders.gminy_prg_as_osm(terc), 200)
+    resp.headers['Content-Disposition'] = 'attachment; filename={0}-gminy.osm'.format(terc)
+    return resp
+
+
 def report_exception(e):
     app.logger.error('{0}: {1}'.format(request.path, e), exc_info=(type(e), e, e.__traceback__))
     return make_response(
