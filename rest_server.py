@@ -1,9 +1,9 @@
 import logging
 import os
+from xml.sax.saxutils import quoteattr
 
 from flask import Flask, make_response as _make_response
 from flask import request
-from xml.sax.saxutils import quoteattr
 
 import borders.borders
 
