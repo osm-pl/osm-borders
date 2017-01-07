@@ -2,18 +2,14 @@ import collections
 import functools
 import io
 import logging
-import os
-import shelve
-import pickle
-import tempfile
-import threading
-import time
 import typing
 import zipfile
 from urllib.request import urlopen
 from xml.etree import ElementTree as ET
 
 from bs4 import BeautifulSoup
+
+from .tools import CachedDictionary
 
 __log = logging.getLogger(__name__)
 
@@ -278,40 +274,6 @@ class UlicMultiEntry(object):
 TYPE_DICT_ENTRIES = typing.TypeVar('V', TercEntry, BasicEntry, SimcEntry, UlicMultiEntry)
 
 
-class Dictionary(typing.Generic[TYPE_DICT_ENTRIES]):
-    def __init__(self, dct: typing.Dict[str, TYPE_DICT_ENTRIES]):
-        self.dct = dct
-
-    def __getitem__(self, item: str) -> TYPE_DICT_ENTRIES:
-        if not item:
-            # ignore NoneType keys
-            return None
-        return self.dct[item]
-
-    def get(self, item) -> TYPE_DICT_ENTRIES:
-        try:
-            return self[item]
-        except KeyError:
-            # noinspection PyTypeChecker
-            return None
-
-
-class DictonarySentinel(typing.Generic[TYPE_DICT_ENTRIES]):
-    def __init__(self, name, clz: TYPE_DICT_ENTRIES):
-        self.name = name
-
-    def __getitem__(self, item) -> TYPE_DICT_ENTRIES:
-        _init()
-        return globals()[self.name][item]
-
-    def get(self, item) -> TYPE_DICT_ENTRIES:
-        try:
-            return self[item]
-        except KeyError:
-            # noinspection PyTypeChecker
-            return None
-
-
 def _zip_read(url: str, fname: str):
     dictionary_zip = zipfile.ZipFile(io.BytesIO(urlopen(url).read()))
     return dictionary_zip.read(fname)
@@ -330,28 +292,6 @@ def _groupby(lst: typing.Iterable, keyfunc=lambda x: x, valuefunc=lambda x: x):
     return rv
 
 
-def _stored_dict(filename: str,
-                 fetcher: typing.Callable[[], typing.Dict[str, TYPE_DICT_ENTRIES]]) -> Dictionary:
-    try:
-        with open(filename, "rb") as f:
-            data = pickle.load(f)
-    except IOError:
-        __log.debug("Can't read a file: %s, starting with a new one", filename, exc_info=True)
-        data = {
-            'time': 0
-        }
-    if data['time'] < time.time() - 180 * 24 * 60 * 60:
-        new = fetcher()
-        data['time'] = time.time()
-        with shelve.open(filename +'.shlv', flag='n') as dct:
-            dct.update(new)
-        with open(filename, 'wb') as f:
-            pickle.dump(data, f)
-
-    shlv = shelve.open(filename +'.shlv', flag='r')
-    return Dictionary(shlv)
-
-
 @functools.lru_cache()
 def files():
     soup = BeautifulSoup(urlopen("http://www.stat.gov.pl/broker/access/prefile/listPreFiles.jspa"), "html.parser")
@@ -365,36 +305,35 @@ def files():
     )
 
 
-def _init():
-    global __is_initialized, __init_lock, teryt, wmrodz, simc, ulic
-    if not __is_initialized:
-        with __init_lock:
-            if not __is_initialized:
-                def get_dict(name: str, cls: typing.ClassVar) -> typing.Iterable[TYPE_DICT_ENTRIES]:
-                    tree = ET.XML(_zip_read(files()[name], name))
-                    return (cls(_row_as_dict(x)) for x in tree.find('catalog').iter('row'))
-
-                teryt = _stored_dict(__DB_TERYT, lambda: dict(((x.terc, x) for x in get_dict('TERC.xml', TercEntry))))
-                wmrodz = _stored_dict(__DB_WMRODZ,
-                                      lambda: dict((x.rm, x.nazwa_rm) for x in get_dict('WMRODZ.xml', BasicEntry)))
-                simc = _stored_dict(__DB_SIMC, lambda: dict((x.sym, x) for x in get_dict('SIMC.xml', SimcEntry)))
-
-                def create_ulic():
-                    grouped = _groupby(get_dict('ULIC.xml', UlicEntry), lambda x: x.symul)
-                    return dict((key, UlicMultiEntry.from_list(value)) for key, value in grouped.items())
-
-                ulic = _stored_dict(__DB_ULIC, create_ulic)
-                __is_initialized = True
+def __get_dict(name: str, cls: typing.ClassVar) -> typing.Iterable[TYPE_DICT_ENTRIES]:
+    tree = ET.XML(_zip_read(files()[name], name))
+    return (cls(_row_as_dict(x)) for x in tree.find('catalog').iter('row'))
 
 
-__DB_TERYT = os.path.join(tempfile.gettempdir(), 'osm_borders_teryt_v1.db')
-__DB_WMRODZ = os.path.join(tempfile.gettempdir(), 'osm_borders_wmrodz_v1.db')
-__DB_SIMC = os.path.join(tempfile.gettempdir(), 'osm_borders_simc_v1.db')
-__DB_ULIC = os.path.join(tempfile.gettempdir(), 'osm_borders_ulic_v1.db')
-__init_lock = threading.Lock()
-__is_initialized = False
+def __wmrodz_create() -> typing.Dict[str, str]:
+    return dict((x.rm, x.nazwa_rm) for x in __get_dict('WMRODZ.xml', BasicEntry))
 
-teryt = DictonarySentinel('teryt', TercEntry)
-wmrodz = DictonarySentinel('wmrodz', BasicEntry)
-simc = DictonarySentinel('simc', SimcEntry)
-ulic = DictonarySentinel('ulic', UlicMultiEntry)
+
+wmrodz = CachedDictionary('osm_teryt_wmrodz_v1', __wmrodz_create)
+
+
+def __teryt_create() -> typing.Dict[str, TercEntry]:
+    return dict(((x.terc, x) for x in __get_dict('TERC.xml', TercEntry)))
+
+
+teryt = CachedDictionary('osm_teryt_teryt_v1', __teryt_create)
+
+
+def __simc_create() -> typing.Dict[str, SimcEntry]:
+    return dict((x.sym, x) for x in __get_dict('SIMC.xml', SimcEntry))
+
+
+simc = CachedDictionary('osm_teryt_simc_v1', __simc_create)
+
+
+def __ulic_create() -> typing.Dict[str, UlicMultiEntry]:
+    grouped = _groupby(__get_dict('ULIC.xml', UlicEntry), lambda x: x.symul)
+    return dict((key, UlicMultiEntry.from_list(value)) for key, value in grouped.items())
+
+
+ulic = CachedDictionary('osm_teryt_ulic_v1', __ulic_create)
