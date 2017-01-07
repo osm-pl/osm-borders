@@ -146,7 +146,7 @@ def clean_borders(borders: typing.List[Feature]) -> None:
                 new_geo = parent_border.geometry.difference(border.geometry)
                 if not new_geo.is_empty:
                     parent_border.geometry = new_geo
-                fixme.append("EMUiA points teryt:terc {0}, name: {1} as parent. In TERC this is standalone".format(
+                fixme.append("EMUiA points teryt:simc {0}, name: {1} as parent. In TERC this is standalone".format(
                     parent_border.tags.get('TERYT_MIEJSCOWOSCI'),
                     parent_border.tags.get('NAZWA')
                 ))
@@ -154,7 +154,7 @@ def clean_borders(borders: typing.List[Feature]) -> None:
                 fixme.append("Missing parent border: {0}".format(parent_id))
 
         if emuia_level == 8 and simc_level == 10:
-            fixme.append("TERC points this as part of teryt:terc={0}, name={1}".format(
+            fixme.append("TERC points this as part of teryt:simc={0}, name={1}".format(
                 simc_entry.parent,
                 SIMC_DICT[simc_entry.parent].nazwa
             ))
