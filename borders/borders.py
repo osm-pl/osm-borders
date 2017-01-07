@@ -1,4 +1,5 @@
 import itertools
+import json
 import logging
 import time
 import typing
@@ -41,6 +42,9 @@ out bb;
 
 TYPE_BBOX = typing.Tuple[float, float, float, float]
 
+
+def geometry_as_geojson(o: shapely.geometry.base.BaseGeometry) -> str:
+    return json.dumps(shapely.geometry.mapping(o))
 
 def divide_bbox(bbox: TYPE_BBOX) -> typing.List[TYPE_BBOX]:
     (minx, miny, maxx, maxy) = bbox
@@ -237,7 +241,7 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry,
         x.tags.get('DO') is None or int(x.tags.get('DO')) > time.time() * 1000)
         if not rv:
             msg = ", ".join("{0}: {1}".format(key, x.tags[key]) for key in sorted(x.tags.keys()))
-            if x.geometry.within(adm_bound):
+            if not x.geometry.intersects(adm_bound):
                 __log.debug("Removing border as it is outside working set: {0}".format(msg))
             else:
                 __log.debug("Removing outdated border: {0}".format(msg))
@@ -273,10 +277,20 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry,
         else:
             raise ValueError("Unknown object type: {0}".format(obj_type))
 
+    def default_filter(feature: Feature) -> bool:
+        if feature.geometry.within(adm_bound):
+            if filter(feature):
+                return True
+            else:
+                __log.debug("Filter function refused border: {0}".format(feature))
+        else:
+            __log.debug("Border is outside working area: {0}".format(feature))
+        return False
+
     converter = FeatureToOsm(borders = borders,
                              tag_mapping= tag_mapping,
-                             filter = lambda x: x.geometry.within(adm_bound) and filter(x),
-                             borders_mapping = borders_mapping )
+                             filter=default_filter,
+                             borders_mapping = borders_mapping)
     return converter.tostring()
 
 
