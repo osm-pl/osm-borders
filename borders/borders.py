@@ -315,7 +315,7 @@ class FeatureToOsm:
         self.borders_mapping = borders_mapping
 
     def tostring(self) -> bytes:
-        out_xml = ET.Element("osm", {'generator': 'osm-borders', 'version': '0.6'})
+        out_xml = ET.Element("osm", {'generator': 'osm-borders', 'version': '0.6', 'upload': 'false'})
         for border in self.borders_mapping(self.borders):
             if self.filter(border):
                 self.dump_relation(out_xml, border)
