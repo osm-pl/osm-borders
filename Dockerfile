@@ -14,7 +14,7 @@ RUN apt-get -y update && \
     pip install -r /app/requirements.txt && \
     rm -rf /var/lib/apt/lists/* && \
     rm -rf ~/.pip && \ 
-    apt remove \
+    apt remove -y \
         g++ \
         gcc \
         libgdal-dev \
