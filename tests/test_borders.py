@@ -17,7 +17,7 @@ from converters.overpyshapely import OverToShape
 logging.basicConfig(level=logging.DEBUG)
 
 
-class OverpyShapely(unittest.TestCase):
+class BorderTests(unittest.TestCase):
     def test_process(self):
         # res = overpy.Overpass().query("[out:json];relation(3094349);out;>;out;")#.get_relation(3094349)
         with open("example.json") as f:
