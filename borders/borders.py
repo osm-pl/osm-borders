@@ -98,7 +98,7 @@ def get_borders(terc: str,
                    do_clean_borders=do_clean_borders)
 
 
-def clean_borders(borders: typing.List[Feature]) -> None:
+def clean_borders(borders: typing.List[Feature], do_clean: bool = True) -> None:
     for border in borders:
         simc_code = border.tags.get('TERYT_MIEJSCOWOSCI')
         parent_id = border.tags.get('IDENTYFIKATOR_NADRZEDNEJ')
@@ -132,7 +132,7 @@ def clean_borders(borders: typing.List[Feature]) -> None:
             try:
                 parent_border = [x for x in borders if x.tags.get('IDENTYFIKATOR_MIEJSCOWOSCI') == parent_id][0]
                 new_geo = parent_border.geometry.difference(border.geometry)
-                if not new_geo.is_empty:
+                if not new_geo.is_empty and do_clean:
                     __log.info("Changing geometry (EMUiA = 10, TERC = 8) of {0} because of {1}. "
                                "{0} border dump: {2}".format(parent_border.tags.get("NAZWA"),
                                                              border.tags.get("NAZWA"),
@@ -153,14 +153,15 @@ def clean_borders(borders: typing.List[Feature]) -> None:
             ))
             level = emuia_level
             try:
-                parent_border = [x for x in borders if x.tags.get('TERYT_MIEJSCOWOSCI') == simc_entry.parent][0]
-                __log.info("Changing geometry (EMUiA = 8, TERC = 10) of {0} because of {1}. "
-                           "{0} border dump: {2}".format(parent_border.tags.get("NAZWA"),
-                                                         border.tags.get("NAZWA"),
-                                                         parent_border)
-                           )
-                parent_border.geometry = parent_border.geometry.union(border.geometry)
-                level = simc_level
+                if do_clean:
+                    parent_border = [x for x in borders if x.tags.get('TERYT_MIEJSCOWOSCI') == simc_entry.parent][0]
+                    __log.info("Changing geometry (EMUiA = 8, TERC = 10) of {0} because of {1}. "
+                               "{0} border dump: {2}".format(parent_border.tags.get("NAZWA"),
+                                                             border.tags.get("NAZWA"),
+                                                             parent_border)
+                               )
+                    parent_border.geometry = parent_border.geometry.union(border.geometry)
+                    level = simc_level
             except IndexError:
                 fixme.append('Missing parent border: {0}'.format(simc_entry.parent))
 
@@ -250,8 +251,7 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry,
     borders = [im.to_feature() for im in set(ImmutableFeature(x) for x in borders if valid_border(x))]
     __log.debug("Names after dedup: {0}".format(len(borders)))
 
-    if do_clean_borders:
-        clean_borders(borders)
+    clean_borders(borders, do_clean=do_clean_borders)
     add_wikidata(wikidata, borders)
 
     for border in borders:
