@@ -1,3 +1,4 @@
+import itertools
 import typing
 from converters.feature import Feature
 import shapely.geometry
@@ -51,21 +52,18 @@ def split_intersec(intersec: shapely.geometry.base.BaseGeometry,
 
 
 def split_by_common_ways(borders: typing.List[Feature]) -> typing.List[Feature]:
-    for border in borders:
-        for other in borders:
-            if border == other:
-                continue
-            __log.debug("Processing border ({0}, {1})".format(borders.index(border), borders.index(other)))
-            intersec = border.geometry.intersection(other.geometry)
-            if intersec.is_empty:
-                continue  # nothing will change anyway
-            if isinstance(intersec, shapely.geometry.GeometryCollection):
-                intersec = shapely.ops.cascaded_union(
-                    [x for x in intersec.geoms if not isinstance(x, shapely.geometry.Point)])
-            if isinstance(intersec, (shapely.geometry.Point, shapely.geometry.MultiPoint)):
-                intersec = shapely.geometry.LineString()  # empty geometry
-            intersec = try_linemerge(intersec)
-            intersec = split_intersec(intersec, [border.geometry, other.geometry])
-            border.geometry = create_multi_string(intersec, border.geometry.difference(intersec))
-            other.geometry = create_multi_string(intersec, other.geometry.difference(intersec))
+    for (border, other) in itertools.combinations(borders, 2):
+        __log.debug("Processing border ({0}, {1})".format(borders.index(border), borders.index(other)))
+        intersec = border.geometry.intersection(other.geometry)
+        if intersec.is_empty:
+            continue  # nothing will change anyway
+        if isinstance(intersec, shapely.geometry.GeometryCollection):
+            intersec = shapely.ops.cascaded_union(
+                [x for x in intersec.geoms if not isinstance(x, shapely.geometry.Point)])
+        if isinstance(intersec, (shapely.geometry.Point, shapely.geometry.MultiPoint)):
+            intersec = shapely.geometry.LineString()  # empty geometry
+        intersec = try_linemerge(intersec)
+        intersec = split_intersec(intersec, [border.geometry, other.geometry])
+        border.geometry = create_multi_string(intersec, border.geometry.difference(intersec))
+        other.geometry = create_multi_string(intersec, other.geometry.difference(intersec))
     return borders
