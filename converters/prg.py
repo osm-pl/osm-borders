@@ -54,8 +54,8 @@ def process_layer(layer_name: str, key: str, filepath: str) -> typing.Dict[str, 
 
     with fiona.drivers():
         dirname = "/" + dirnames.pop()
-        layers = fiona.listlayers(dirname, "zip://" + filepath)
-        logging.debug("Found layers: {0}".format(", ".join(layers)))
+        #layers = fiona.listlayers(dirname, "zip://" + filepath, encoding='cp1250')
+        #logging.debug("Found layers: {0}".format(", ".join(layers)))
         with fiona.open(path=dirname, vfs="zip://" + filepath, layer=layer_name, mode="r", encoding='cp1250') as data:
             transform = functools.partial(pyproj.transform, pyproj.Proj(data.crs), pyproj.Proj(init="epsg:4326"))
             return dict((x['properties'][key], project(transform, x)) for x in data)
