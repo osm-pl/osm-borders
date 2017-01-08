@@ -34,6 +34,12 @@ class Feature:
     def __str__(self):
         return str(self._tags)
 
+    @staticmethod
+    def from_geojson(dct: dict):
+        tags = dct['properties']
+        geometry = shapely.geometry.shape(dct['geometry'])
+        return Feature(geometry, tags)
+
 
 class ImmutableFeature:
     def __init__(self, feature: Feature):

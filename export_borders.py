@@ -19,7 +19,7 @@ def main():
 
     logging.basicConfig(level=args.log_level)
 
-    args.output.write(get_borders(args.terc[0]))
+    args.output.write(get_borders(args.terc[0], filter=lambda x: x.tags.get('admin_level') == "8"))
 
 
 if __name__ == '__main__':

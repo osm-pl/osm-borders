@@ -1,9 +1,9 @@
 import logging
 import os
+from xml.sax.saxutils import quoteattr
 
 from flask import Flask, make_response as _make_response
 from flask import request
-from xml.sax.saxutils import quoteattr
 
 import borders.borders
 
@@ -39,6 +39,13 @@ def error(stuff):
 def get_lvl8_borders(terc):
     resp = make_response(borders.borders.get_borders(terc, lambda x: x.tags.get('admin_level') == "8"), 200)
     resp.headers['Content-Disposition'] = 'attachment; filename={0}.osm'.format(terc)
+    return resp
+
+
+@app.route("/prg/gminy/<terc>.osm", methods=["GET", ])
+def get_gminy(terc):
+    resp = make_response(borders.borders.gminy_prg_as_osm(terc), 200)
+    resp.headers['Content-Disposition'] = 'attachment; filename={0}-gminy.osm'.format(terc)
     return resp
 
 

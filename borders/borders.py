@@ -1,43 +1,29 @@
 import itertools
 import json
 import logging
+import math
 import time
 import typing
 import xml.etree.ElementTree as ET
 
 import cachetools.func
-import math
 import requests
 import shapely.geometry
 import shapely.ops
-from overpy import Overpass
 
 from borders.geoutils import split_by_common_ways
 from borders.wikidata import fetch_from_wikidata, WikidataSimcEntry
 from converters.feature import ImmutableFeature, Feature
 from converters.kmlshapely import kml_to_shapely
-from converters.overpyshapely import OverToShape
+from converters.prg import gminy as GMINY_DICT
 from converters.teryt import simc as SIMC_DICT
 
 __log = logging.getLogger(__name__)
 
 
 @cachetools.func.ttl_cache(maxsize=128, ttl=600)
-def get_adm_border(terc: str) -> Feature:
-    api = Overpass()
-    result = api.query("""
-[out:json];
-relation
-    ["teryt:terc"="%s"]
-    ["boundary"="administrative"]
-    ["admin_level"~"[79]"];
-out bb;
->;
-out bb;
-    """ % (terc,))
-    if not result.relations:
-        raise ValueError("No relation found for terc: {0}".format(terc))
-    return OverToShape(result).get_relation_feature()
+def get_adm_border(terc: str) -> shapely.geometry.base.BaseGeometry:
+    return shapely.geometry.shape(GMINY_DICT[terc]['geometry'])
 
 
 TYPE_BBOX = typing.Tuple[float, float, float, float]
@@ -93,7 +79,7 @@ def fetch_from_emuia(bbox: TYPE_BBOX) -> typing.List[Feature]:
 def get_borders(terc: str,
                 filter:  typing.Callable[[Feature, ], bool] = lambda x: True,
                 borders_mapping: typing.Callable[[typing.List[Feature], ], typing.List[Feature]] = split_by_common_ways) -> bytes:
-    adm_bound = get_adm_border(terc).geometry
+    adm_bound = get_adm_border(terc)
     borders = []
     for bbox in divide_bbox(adm_bound.bounds):  # area we need to fetch from EMUiA
         borders.extend(fetch_from_emuia(bbox))
@@ -401,3 +387,43 @@ class FeatureToOsm:
                     ET.SubElement(node, "tag", {'k': key, 'v': value})
             rv.append(current_id)
         return rv
+
+
+def gminy_prg_as_osm(terc: str):
+    borders = [Feature.from_geojson(GMINY_DICT[x]) for x in GMINY_DICT.keys() if x.startswith(terc)]
+
+    for x in borders:
+        x.geometry = x.geometry.boundary
+
+    def tag_mapping(obj_type: str, tags: typing.Dict[str, str]) -> typing.Generator[typing.Tuple[str, str], None, None]:
+        if obj_type == "relation":
+            for key, value in tags.items():
+                if value:
+                    yield ('prg:' + key, str(value))
+            yield ('boundary', 'administrative')
+            yield ('type', 'boundary')
+            yield ('source:generator', 'osm-borders.py')
+            terc_len = len(tags['jpt_kod_je'])
+            if terc_len == 4:
+                yield ('admin_level', str(6))
+            elif terc_len == 2:
+                yield ('admin_level', str(4))
+            elif terc_len == 7:
+                yield ('admin_level', str(7))
+            else:
+                yield ('admin_level', 'TODO')
+            yield ('name', tags.get('jpt_nazwa_', ''))
+            yield ('teryt:simc', tags.get('jpt_kod_je', ''))
+            for key in ('wikidata', 'wikipedia', 'fixme'):
+                if key in tags:
+                    yield (key, str(tags[key]))
+        elif obj_type == "way":
+            yield ('source:geometry', 'PRG')
+            yield ('boundary', 'administrative')
+        elif obj_type == "node":
+            pass
+        else:
+            raise ValueError("Unknown object type: {0}".format(obj_type))
+
+    converter = FeatureToOsm(borders=borders, tag_mapping=tag_mapping)
+    return converter.tostring()

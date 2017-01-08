@@ -23,7 +23,7 @@ class CachedDictionary(typing.Generic[T]):
     def __getitem__(self, item):
         return self.__getitem_monkey_patch(item)
 
-    def __getitem_monkey_patch(self, item: str) -> T:
+    def _monkey_patch(self):
         with self.lock:
             if not self.dct:  # check if we have initialized
                 try:
@@ -43,9 +43,15 @@ class CachedDictionary(typing.Generic[T]):
                         pickle.dump(data, f)
 
                 self.dct = shelve.open(self.filename + '.shlv', flag='r')
+                # monkey patch the instance
                 self.__getitem_monkey_patch = self._getitem___after
-                self.func = None  # free context, as it will be no longer needed
+                self.keys = self.keys_after
+                # free context, as it will be no longer needed
+                self.func = None
                 self.lock = None
+
+    def __getitem_monkey_patch(self, item: str) -> T:
+        self._monkey_patch()
         return self.__getitem__(item)
 
     def _getitem___after(self, item: str) -> T:
@@ -60,3 +66,10 @@ class CachedDictionary(typing.Generic[T]):
         except KeyError:
             # noinspection PyTypeChecker
             return None
+
+    def keys(self):
+        self._monkey_patch()
+        return self.keys()
+
+    def keys_after(self) -> typing.Iterable[str]:
+        return self.dct.keys()
