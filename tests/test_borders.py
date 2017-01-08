@@ -743,5 +743,7 @@ class BorderTests(unittest.TestCase):
         with open("../out.osm", "wb+") as f:
             f.write(ret)
         rv = overpy.Result.from_xml(ret.decode('utf-8'))
-        rel = [x for x in rv.relations if x.tags.get('name') == 'Pelnik'][0]
-        self.assertLess(len(rel.members), 10)
+        self.assertEquals(
+            {'Radwanice', 'Gaworzyce', 'Grębocice', 'Polkowice', 'Chocianów', 'Przemków'},
+            set(x.tags.get('name') for x in rv.relations)
+        )
