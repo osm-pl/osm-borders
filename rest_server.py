@@ -25,7 +25,7 @@ def get_all_borders(terc):
 
 @app.route("/nosplit/<terc>.osm", methods=["GET", ])
 def get_nosplit_borders(terc):
-    resp = make_response(borders.borders.get_borders(terc, borders_mapping=lambda x: x), 200)
+    resp = make_response(borders.borders.get_borders(terc, borders_mapping=lambda x: x, do_clean_borders=False), 200)
     resp.headers['Content-Disposition'] = 'attachment; filename={0}.osm'.format(terc)
     return resp
 

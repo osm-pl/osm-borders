@@ -78,7 +78,8 @@ def fetch_from_emuia(bbox: TYPE_BBOX) -> typing.List[Feature]:
 
 def get_borders(terc: str,
                 filter:  typing.Callable[[Feature, ], bool] = lambda x: True,
-                borders_mapping: typing.Callable[[typing.List[Feature], ], typing.List[Feature]] = split_by_common_ways) -> bytes:
+                borders_mapping: typing.Callable[[typing.List[Feature], ], typing.List[Feature]] = split_by_common_ways,
+                do_clean_borders: bool = True) -> bytes:
     adm_bound = get_adm_border(terc)
     borders = []
     for bbox in divide_bbox(adm_bound.bounds):  # area we need to fetch from EMUiA
@@ -93,7 +94,8 @@ def get_borders(terc: str,
                    borders = borders,
                    filter = filter,
                    borders_mapping=borders_mapping,
-                   wikidata=wikidata)
+                   wikidata=wikidata,
+                   do_clean_borders=do_clean_borders)
 
 
 def clean_borders(borders: typing.List[Feature]) -> None:
@@ -218,7 +220,8 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry,
             filter: typing.Callable[[Feature, ], bool] = lambda x: True,
             borders_mapping: typing.Callable[[typing.List[Feature], ],
                                              typing.List[Feature]] = split_by_common_ways,
-            wikidata: typing.List[WikidataSimcEntry] = None) -> bytes:
+            wikidata: typing.List[WikidataSimcEntry] = None,
+            do_clean_borders: bool = True) -> bytes:
     """
 
     :param adm_bound: shape of the area that one should work on
@@ -247,7 +250,8 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry,
     borders = [im.to_feature() for im in set(ImmutableFeature(x) for x in borders if valid_border(x))]
     __log.debug("Names after dedup: {0}".format(len(borders)))
 
-    clean_borders(borders)
+    if do_clean_borders:
+        clean_borders(borders)
     add_wikidata(wikidata, borders)
 
     for border in borders:
