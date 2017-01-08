@@ -131,6 +131,11 @@ def clean_borders(borders: typing.List[Feature]) -> None:
                 parent_border = [x for x in borders if x.tags.get('IDENTYFIKATOR_MIEJSCOWOSCI') == parent_id][0]
                 new_geo = parent_border.geometry.difference(border.geometry)
                 if not new_geo.is_empty:
+                    __log.info("Changing geometry (EMUiA = 10, TERC = 8) of {0} because of {1}. "
+                               "{0} border dump: {2}".format(parent_border.tags.get("NAZWA"),
+                                                             border.tags.get("NAZWA"),
+                                                             parent_border)
+                               )
                     parent_border.geometry = new_geo
                 fixme.append("EMUiA points teryt:simc {0}, name: {1} as parent. In TERC this is standalone".format(
                     parent_border.tags.get('TERYT_MIEJSCOWOSCI'),
@@ -147,6 +152,11 @@ def clean_borders(borders: typing.List[Feature]) -> None:
             level = emuia_level
             try:
                 parent_border = [x for x in borders if x.tags.get('TERYT_MIEJSCOWOSCI') == simc_entry.parent][0]
+                __log.info("Changing geometry (EMUiA = 8, TERC = 10) of {0} because of {1}. "
+                           "{0} border dump: {2}".format(parent_border.tags.get("NAZWA"),
+                                                         border.tags.get("NAZWA"),
+                                                         parent_border)
+                           )
                 parent_border.geometry = parent_border.geometry.union(border.geometry)
                 level = simc_level
             except IndexError:
