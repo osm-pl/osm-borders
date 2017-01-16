@@ -53,7 +53,8 @@ def divide_bbox(bbox: TYPE_BBOX) -> typing.List[TYPE_BBOX]:
 
 @cachetools.func.ttl_cache(maxsize=128, ttl=24 * 3600)
 def fetch_from_emuia_cached(bbox: TYPE_BBOX) -> str:
-    resp = requests.get("http://emuia1.gugik.gov.pl/wmsproxy/emuia/wms",
+    try:
+        resp = requests.get("http://emuia1.gugik.gov.pl/wmsproxy/emuia/wms",
                         params={
                             "FORMAT": "application/vnd.google-earth.kml+xml",
                             "VERSION": "1.1.1",
@@ -69,6 +70,8 @@ def fetch_from_emuia_cached(bbox: TYPE_BBOX) -> str:
                             "BBOX": "{0},{1},{2},{3}".format(*bbox)
                         },
                         verify=False)
+    except requests.exceptions.ConnectionError as e:
+        raise requests.exceptions.ConnectionError(e.errno if e.errno else -1, "Problem connecting to EMUiA", e)
     return resp.text
 
 
