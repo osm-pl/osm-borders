@@ -72,6 +72,13 @@ def fetch_from_emuia_cached(bbox: TYPE_BBOX) -> str:
                         verify=False)
     except requests.exceptions.ConnectionError as e:
         raise requests.exceptions.ConnectionError(e.errno if e.errno else -1, "Problem connecting to EMUiA", e)
+    try:
+        ET.XML(resp.text)
+    except Exception as e:
+        if len(resp.text) < 1024:
+            raise ValueError("Unexpected response from EMUiA. Not an XML: " + resp.text)
+        else:
+            raise ValueError("Unexpected response from EMUiA. Not an XML", e)
     return resp.text
 
 
