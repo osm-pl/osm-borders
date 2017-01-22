@@ -265,7 +265,17 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry,
     add_wikidata(wikidata, borders)
 
     for border in borders:
-        border.geometry = border.geometry.boundary  # use LineStrings instead of Polygons
+        # orient strings (counterclockwise) and then get its borders
+        # use LineStrings instead of Polygons
+        if isinstance(border.geometry, shapely.geometry.polygon.Polygon):
+            border.geometry = shapely.geometry.polygon.orient(border.geometry).boundary
+        elif isinstance(border.geometry, shapely.geometry.multipolygon.MultiPolygon):
+            geoms = [shapely.geometry.polygon.orient(x) if isinstance(x, shapely.geometry.polygon.Polygon) else x
+                     for x in border.geometry.geoms]
+            border.geometry = shapely.geometry.asMultiPolygon(geoms).boundary
+        else:
+            border.geometry = border.geometry.boundary
+
 
     def tag_mapping(obj_type: str, tags: typing.Dict[str, str]) -> typing.Generator[typing.Tuple[str, str], None, None]:
         if obj_type == "relation":

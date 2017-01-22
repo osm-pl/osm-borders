@@ -747,3 +747,16 @@ class BorderTests(unittest.TestCase):
             {'Radwanice', 'Gaworzyce', 'Grębocice', 'Polkowice', 'Chocianów', 'Przemków'},
             set(x.tags.get('name') for x in rv.relations)
         )
+
+    @unittest.skip("No idea how to make it work...")
+    def test_overlapping_ways(self):
+        with open("0402102.json") as f:
+            res = overpy.Result.from_json(json.load(f))
+        with open("0402102.kml") as f:
+            obj = kml_to_shapely(f.read())
+            ret = borders.borders.process(OverToShape(res).get_relation_feature().geometry, obj)
+        with open("../out.osm", "wb+") as f:
+            f.write(ret)
+        rv = overpy.Result.from_xml(ret.decode('utf-8'))
+        rel = [x for x in rv.relations if x.tags.get('name') == 'Tomki'][0]
+        self.assertEqual(7, len(rel.members))
