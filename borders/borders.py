@@ -274,7 +274,8 @@ def process(adm_bound: shapely.geometry.base.BaseGeometry,
             yield ('source:generator', 'osm-borders.py')
             yield ('admin_level', tags['admin_level'])
             yield ('name', tags['NAZWA'])
-            yield ('teryt:simc', tags['TERYT_MIEJSCOWOSCI'])
+            if 'TERYT_MIEJSCOWOSCI' in tags:
+                yield ('teryt:simc', tags['TERYT_MIEJSCOWOSCI'])
             yield ('name:prefix', tags['RODZAJ'].lower())
             for key in ('wikidata', 'wikipedia', 'fixme'):
                 if key in tags:
