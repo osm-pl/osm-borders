@@ -3,9 +3,10 @@ import os
 from xml.sax.saxutils import quoteattr
 
 from flask import Flask, make_response as _make_response
-from flask import request
+from flask import request, redirect, url_for, render_template
 
 import borders.borders
+from converters import teryt
 
 app = Flask(__name__)
 
@@ -48,6 +49,24 @@ def get_gminy(terc):
     resp.headers['Content-Disposition'] = 'attachment; filename={0}-gminy.osm'.format(terc)
     return resp
 
+
+@app.errorhandler(404)
+def page_not_found(error):
+    return redirect(url_for("listAll"))
+
+
+@app.route("/list/")
+def listAll():
+    return list(None)
+
+
+@app.route("/list/<terc>")
+def list(terc):
+    items = sorted(
+        [(k, v) for k, v in teryt.teryt.items() if k.startswith(terc)] if terc else teryt.teryt.items(),
+        key=lambda x: x[0]  # sort by keys
+    )
+    return render_template('list.html', items=items)
 
 def report_exception(e):
     app.logger.error('{0}: {1}'.format(request.path, e), exc_info=(type(e), e, e.__traceback__))

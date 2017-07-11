@@ -1,0 +1,36 @@
+<!doctype html>
+<title>Granice gmin i miejscowości w Polsce</title>
+
+<table>
+    <thead>
+    <tr>
+        <th>Nazwa</th>
+        <th>Rodzaj</th>
+        <th>Kod TERC</th>
+        <th>Linki</th>
+    </tr>
+    </thead>
+    {% for terc, item in items %}
+        <tr>
+            <th>{{ item.nazwa }}</th>
+            <td>{{ item.rodz_nazwa }}</td>
+            <td>{{ terc }}</td>
+            <td>
+                <ul>
+                    {% if terc|length < 7 %}
+                        <li><a href="{{ terc }}">Przejdź do listy dla {{ item.nazwa }} ({{ terc }})</a></li>
+                    {% endif %}
+                    {% if terc|length == 4 %}
+                        <li><a href="../prg/gminy/{{ terc }}.osm">Granice gmin w powiecie</a></li>
+                    {% endif %}
+                    {% if terc|length == 7 %}
+                        <li><a href="../{{ terc }}.osm">Granice miejscowości w gminie</a></li>
+                        <li><a href="../all/{{ terc }}.osm">Granice miejscowości i przysiółków w gminie</a></li>
+                        <li><a href="../nosplit/{{ terc }}.osm">Granice miejscowości w gminie (bez dzielenia linii)</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </td>
+        </tr>
+    {% endfor %}
+</table>
