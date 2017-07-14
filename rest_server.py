@@ -62,11 +62,11 @@ def listAll():
 
 @app.route("/list/<terc>")
 def list(terc):
-    items = sorted(
-        [(k, v) for k, v in teryt.teryt.items() if k.startswith(terc)] if terc else teryt.teryt.items(),
-        key=lambda x: x[0]  # sort by keys
-    )
-    return render_template('list.html', items=items)
+    if terc:
+        items = [(k, v) for k, v in teryt.teryt.items() if k.startswith(terc) and len(k) > len(terc)]
+    else:
+        items = [(k, v) for k, v in teryt.teryt.items() if len(k) < 7]
+    return render_template('list.html', items=items, teryt=teryt.teryt)
 
 def report_exception(e):
     app.logger.error('{0}: {1}'.format(request.path, e), exc_info=(type(e), e, e.__traceback__))
