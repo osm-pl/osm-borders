@@ -1,5 +1,4 @@
 import base64
-import collections
 import io
 import logging
 import typing
@@ -9,7 +8,7 @@ from xml.etree import ElementTree as ET
 import zeep
 from zeep.wsse.username import UsernameToken
 
-from .tools import CachedDictionary
+from .tools import CachedDictionary, groupby
 
 __log = logging.getLogger(__name__)
 
@@ -286,13 +285,6 @@ def _row_as_dict(elem: ET.Element):
     )
 
 
-def _groupby(lst: typing.Iterable, keyfunc=lambda x: x, valuefunc=lambda x: x):
-    rv = collections.defaultdict(list)
-    for i in lst:
-        rv[keyfunc(i)].append(valuefunc(i))
-    return rv
-
-
 def _get_teryt_client():
     wsdl = 'https://uslugaterytws1.stat.gov.pl/wsdl/terytws1.wsdl'
     wsse = UsernameToken('osmaddrtools', '#06JWOWutt4')
@@ -354,7 +346,7 @@ def __ULIC_binary() -> bytes:
 
 
 def __ulic_create() -> typing.Dict[str, UlicMultiEntry]:
-    grouped = _groupby(__get_dict(__ULIC_binary, UlicEntry), lambda x: x.symul)
+    grouped = groupby(__get_dict(__ULIC_binary, UlicEntry), lambda x: x.symul)
     return dict((key, UlicMultiEntry.from_list(value)) for key, value in grouped.items())
 
 

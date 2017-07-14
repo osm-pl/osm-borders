@@ -1,3 +1,4 @@
+import collections
 import logging
 import os
 import pickle
@@ -82,4 +83,9 @@ class CachedDictionary(typing.Generic[T]):
     def __items_after(self) -> typing.ItemsView[str, T]:
         return self.dct.items()
 
-    dict()
+
+def groupby(lst: typing.Iterable, keyfunc=lambda x: x, valuefunc=lambda x: x):
+    rv = collections.defaultdict(list)
+    for i in lst:
+        rv[keyfunc(i)].append(valuefunc(i))
+    return rv
