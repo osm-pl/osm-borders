@@ -286,6 +286,7 @@ def _row_as_dict(elem: ET.Element):
 
 
 def _get_teryt_client():
+    __log.info("Connecting to TERYT web service")
     wsdl = 'https://uslugaterytws1.stat.gov.pl/wsdl/terytws1.wsdl'
     wsse = UsernameToken('osmaddrtools', '#06JWOWutt4')
     return zeep.Client(wsdl=wsdl, wsse=wsse)
@@ -299,8 +300,10 @@ def __get_dict(fetcher: typing.Callable[[], bytes], cls: typing.ClassVar) -> typ
 def __WMRODZ_binary() -> bytes:
     client = _get_teryt_client()
     data = client.service.PobierzDateAktualnegoKatSimc()
+    __log.info("Downloading WMRODZ dictionary")
     dane = client.service.PobierzKatalogWMRODZ(data)
-    return base64.decodebytes(dane.plik_zawartosc)
+    __log.info("Downloading WMRODZ dictionary - done")
+    return base64.decodebytes(dane.plik_zawartosc.encode('utf-8'))
 
 
 def __wmrodz_create() -> typing.Dict[str, str]:
@@ -313,7 +316,9 @@ wmrodz = CachedDictionary('osm_teryt_wmrodz_v1', __wmrodz_create)
 def __TERC_binary() -> bytes:
     client = _get_teryt_client()
     data = client.service.PobierzDateAktualnegoKatTerc()
+    __log.info("Downloading TERC dictionary")
     dane = client.service.PobierzKatalogTERC(data)
+    __log.info("Downloading TERC dictionary - done")
     return base64.decodebytes(dane.plik_zawartosc.encode('utf-8'))
 
 
@@ -327,7 +332,9 @@ teryt = CachedDictionary('osm_teryt_teryt_v1', __teryt_create)
 def __SIMC_binary() -> bytes:
     client = _get_teryt_client()
     data = client.service.PobierzDateAktualnegoKatSimc()
+    __log.info("Downloading SIMC dictionary")
     dane = client.service.PobierzKatalogSIMC(data)
+    __log.info("Downloading SIMC dictionary - done")
     return base64.decodebytes(dane.plik_zawartosc.encode('utf-8'))
 
 
@@ -341,7 +348,9 @@ simc = CachedDictionary('osm_teryt_simc_v1', __simc_create)
 def __ULIC_binary() -> bytes:
     client = _get_teryt_client()
     data = client.service.PobierzDateAktualnegoKatUlic()
+    __log.info("Downloading ULIC dictionary")
     dane = client.service.PobierzKatalogULIC(data)
+    __log.info("Downloading ULIC dictionary - done")
     return base64.decodebytes(dane.plik_zawartosc.encode('utf-8'))
 
 
