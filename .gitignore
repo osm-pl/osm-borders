@@ -1,0 +1,6 @@
+package_fetcher.zip
+package_rest.zip
+amazon/.terraform
+amazon/terraform.tfstate*
+**/__pycache__
+.idea
