@@ -29,7 +29,7 @@ def get_addresses(terc):
             len(woj)
         ))
 
-    r = get_emuia_slo("slo", woj[0]['jednAdm']['wojIIPPn'], woj[0]['jednAdm']['wojIIPId'])
+    r = get_emuia_slo("pow", woj[0]['jednAdm']['wojIIPPn'], woj[0]['jednAdm']['wojIIPId'])
     powiat = [x for x in r['jednAdms'] if x['jednAdm']['powIdTeryt'] == terc[:4]]
     if len(powiat) != 1:
         raise ValueError("No powiat found for terc: {}. Objects found: {}".format(terc[:2], len(powiat)))
@@ -41,20 +41,32 @@ def get_addresses(terc):
 
     r = get_emuia_slo("miejsc", gmina[0]['jednAdm']['gmIIPPn'], gmina[0]['jednAdm']['gmIIPId'])
 
-    adresy = []
-    __log.info("Fetching addresses for terc: %s", terc)
+    __log.info("Preparing list URLs to download addresses: %s", terc)
+    addresses_to_fetch = []
     for miejscowosc in tqdm.tqdm(r['miejscowosci']):
-        adresy.extend(
-            get_emuia_slo("adr/miejsc",
-                          miejscowosc['miejscowosc']['miejscIIPPn'],
-                          miejscowosc['miejscowosc']['miejscIIPId']
-                          )['adresy']
+        addresses_to_fetch.append(
+            (
+                "adr/miejsc",
+                miejscowosc['miejscowosc']['miejscIIPPn'],
+                miejscowosc['miejscowosc']['miejscIIPId']
+             )
         )
 
         for ulica in get_emuia_slo("ul",
                                    miejscowosc['miejscowosc']['miejscIIPPn'],
                                    miejscowosc['miejscowosc']['miejscIIPId']
                                    )['ulice']:
-            adresy.extend(get_emuia_slo("adr/ul", ulica['ulica']['ulIIPPn'], ulica['ulica']['ulIIPId'])['adresy'])
+            addresses_to_fetch.append(
+                (
+                    "adr/ul",
+                    ulica['ulica']['ulIIPPn'],
+                    ulica['ulica']['ulIIPId']
+                )
+            )
 
-    return adresy
+    __log.info("Fetching addresses for terc: %s", terc)
+    ret = []
+    for fetch_args in tqdm.tqdm(addresses_to_fetch):
+        ret.extend(get_emuia_slo(*fetch_args)['adresy'])
+
+    return ret
