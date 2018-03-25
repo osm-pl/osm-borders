@@ -8,10 +8,12 @@ import tempfile
 import time
 import typing
 
-import botocore.exceptions
 import tqdm
 from google.protobuf import message
 from google.protobuf.descriptor import FieldDescriptor
+
+if os.environ.get('USE_AWS'):
+    import botocore.exceptions
 
 
 T = typing.TypeVar('T')
