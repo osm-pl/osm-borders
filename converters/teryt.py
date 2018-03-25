@@ -792,7 +792,7 @@ class BaseTerytCache(converters.tools.VersionedCache):
         tree = ET.fromstring(data)
         cache = self._get_cache(from_version)
 
-        for zmiana in tqdm.tqdm(tree.findall('zmiana')):
+        for zmiana in tqdm.tqdm(tree.findall('zmiana'), desc="Processing changes"):
             operation = zmiana.find('TypKorekty').text
             handler = self.change_handlers.get(operation)
             if not handler:

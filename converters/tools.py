@@ -71,7 +71,7 @@ class Cache(typing.Generic[T]):
         raise NotImplementedError
 
     def reload(self, contents: typing.Dict[str, T]):
-        for key, value in tqdm.tqdm(contents.items()):
+        for key, value in tqdm.tqdm(contents.items(), desc="Reloading cache"):
             self.add(key, value)
 
     def __getitem__(self, item):
@@ -158,7 +158,7 @@ class VersionedCache(typing.Generic[T]):
     def verify(self):
         cache = self._get_cache(cache_version=-1)
         errors = 0
-        for key, value in tqdm.tqdm(self._get_cache_data(self.file_cache_version()).items()):
+        for key, value in tqdm.tqdm(self._get_cache_data(self.file_cache_version()).items(), "Verifying cache"):
             cache_entry = cache.get(key)
             if not cache_entry == value:
                 self.__log.warning(
@@ -274,7 +274,7 @@ class DynamoCache(Cache):
                 except botocore.exceptions.ClientError:
                     pass
             with self._table.batch_writer() as batch:
-                for k, v in tqdm.tqdm(contents.items()):
+                for k, v in tqdm.tqdm(contents.items(), desc="Reloading cache"):
                     batch.put_item(
                         Item={
                             'key': k,
