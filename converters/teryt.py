@@ -12,6 +12,7 @@ from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import tostring
 
 import requests
+import tqdm
 import zeep
 from zeep.wsse.username import UsernameToken
 
