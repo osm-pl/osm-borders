@@ -43,7 +43,7 @@ def get_addresses(terc):
 
     __log.info("Preparing list URLs to download addresses: %s", terc)
     addresses_to_fetch = []
-    for miejscowosc in tqdm.tqdm(r['miejscowosci']):
+    for miejscowosc in tqdm.tqdm(r['miejscowosci'], desc="Pre-download"):
         addresses_to_fetch.append(
             (
                 "adr/miejsc",
@@ -66,7 +66,7 @@ def get_addresses(terc):
 
     __log.info("Fetching addresses for terc: %s", terc)
     ret = []
-    for fetch_args in tqdm.tqdm(addresses_to_fetch):
+    for fetch_args in tqdm.tqdm(addresses_to_fetch, desc="Download"):
         ret.extend(get_emuia_slo(*fetch_args)['adresy'])
 
     return ret
