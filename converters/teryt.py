@@ -660,6 +660,7 @@ class UlicMultiEntry(object):
         self.sym_ul = entry.sym_ul
         self.cecha = entry.cecha
         self.nazwa = entry.nazwa
+        self.cecha_orig = entry.cecha_orig
         self.entries = {entry.sym: entry}
 
     def __str__(self):
