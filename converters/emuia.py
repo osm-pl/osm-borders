@@ -1,3 +1,4 @@
+import concurrent.futures
 import logging
 
 import requests
@@ -42,31 +43,50 @@ def get_addresses(terc):
     r = get_emuia_slo("miejsc", gmina[0]['jednAdm']['gmIIPPn'], gmina[0]['jednAdm']['gmIIPId'])
 
     __log.info("Preparing list URLs to download addresses: %s", terc)
-    addresses_to_fetch = []
-    for miejscowosc in tqdm.tqdm(r['miejscowosci'], desc="Pre-download"):
-        addresses_to_fetch.append(
-            (
-                "adr/miejsc",
-                miejscowosc['miejscowosc']['miejscIIPPn'],
-                miejscowosc['miejscowosc']['miejscIIPId']
-             )
-        )
 
-        for ulica in get_emuia_slo("ul",
-                                   miejscowosc['miejscowosc']['miejscIIPPn'],
-                                   miejscowosc['miejscowosc']['miejscIIPId']
-                                   )['ulice']:
-            addresses_to_fetch.append(
-                (
-                    "adr/ul",
-                    ulica['ulica']['ulIIPPn'],
-                    ulica['ulica']['ulIIPId']
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        addresses_to_fetch = []
+
+        def fetch_ulica(iiippn, iipid):
+            for ulica in get_emuia_slo("ul", iiippn, iipid)['ulice']:
+                addresses_to_fetch.append(
+                    executor.submit(
+                        get_emuia_slo,
+                        "adr/ul",
+                        ulica['ulica']['ulIIPPn'],
+                        ulica['ulica']['ulIIPId']
+                    )
                 )
-            )
 
-    __log.info("Fetching addresses for terc: %s", terc)
-    ret = []
-    for fetch_args in tqdm.tqdm(addresses_to_fetch, desc="Download"):
-        ret.extend(get_emuia_slo(*fetch_args)['adresy'])
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as ulica_executor:
+            ulica_futures = []
+            for miejscowosc in r['miejscowosci']:
+                addresses_to_fetch.append(
+                    executor.submit(
+                        get_emuia_slo,
+                        "adr/miejsc",
+                        miejscowosc['miejscowosc']['miejscIIPPn'],
+                        miejscowosc['miejscowosc']['miejscIIPId']
+                    )
+                )
+
+                ulica_futures.append(
+                    ulica_executor.submit(fetch_ulica,
+                                          miejscowosc['miejscowosc']['miejscIIPPn'],
+                                          miejscowosc['miejscowosc']['miejscIIPId']
+                                          )
+                )
+            # give meaningful progressbar
+            for _ in tqdm.tqdm(
+                    concurrent.futures.as_completed(ulica_futures),
+                    total=len(ulica_futures),
+                    desc="Pre-download"
+            ):
+                pass
+        __log.info("Fetching addresses for terc: %s", terc)
+        ret = []
+
+        for result in tqdm.tqdm(addresses_to_fetch, desc="Download"):
+            ret.extend(result.result()['adresy'])
 
     return ret
