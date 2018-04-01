@@ -749,6 +749,21 @@ class UlicMultiEntry(object):
         self.cecha = new_cecha
         self.nazwa = new_nazwa
 
+    def solr_json(self) -> tuple:
+        sorted_entries = list(sorted(self.entries.values(), key=lambda x: x.miejscowosc))
+        return (
+            "add", {
+                "doc": {
+                    'id': 'ulic:' + self.sym_ul,
+                    'parent': [('simc_' + entry.sym) for entry in sorted_entries],
+                    'miejscowosc': [entry.miejscowosc for entry in sorted_entries],
+                    'value': self.nazwa,
+                    'symul': self.sym_ul,
+                    'typ': 'ulic',
+                }
+            }
+        )
+
 
 def _wmrodz_binary(version: datetime.date) -> bytes:
     __log = logging.getLogger(__name__ + '._wmrodz_binary')
