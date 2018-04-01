@@ -16,7 +16,7 @@ import tqdm
 import zeep
 from zeep.wsse.username import UsernameToken
 
-from .tools import VersionedCache
+from .tools import VersionedCache, CacheNotInitialized
 from .teryt_pb2 import \
     TercEntry as TercEntry_pb, \
     SimcEntry as SimcEntry_pb, \
@@ -786,7 +786,11 @@ def __wmrodz_create():
 
 
 def wmrodz() -> Cache[str]:
-    return get_cache_manager().get_cache(TERYT_WMRODZ_DB)
+    try:
+        return get_cache_manager().get_cache(TERYT_WMRODZ_DB)
+    except CacheNotInitialized:
+        __wmrodz_create()
+        return get_cache_manager().get_cache(TERYT_WMRODZ_DB)
 
 
 class BaseTerytCache(VersionedCache[T]):
