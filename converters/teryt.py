@@ -788,7 +788,7 @@ def wmrodz() -> Cache[str]:
     return get_cache_manager().get_cache(TERYT_WMRODZ_DB)
 
 
-class BaseTerytCache(VersionedCache):
+class BaseTerytCache(VersionedCache[T]):
     __log = logging.getLogger(__name__ + '.BaseTerytCache')
     change_handlers = dict()
 
@@ -824,11 +824,11 @@ class BaseTerytCache(VersionedCache):
         raise NotImplementedError
 
 
-class SimcCache(BaseTerytCache):
+class SimcCache(BaseTerytCache[SimcEntry]):
     __log = logging.getLogger(__name__ + '.SimcCache')
 
     def __init__(self):
-        super(SimcCache, self).__init__(TERYT_SIMC_DB, SimcEntry)
+        super(SimcCache, self).__init__(TERYT_SIMC_DB)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, SimcEntry]:
         self.__log.info("Downloading SIMC version: %s", _int_to_datetime(version))
@@ -927,11 +927,11 @@ def simc() -> Cache[SimcEntry]:
     return SimcCache().get_cache()
 
 
-class TerytCache(BaseTerytCache):
+class TerytCache(BaseTerytCache[TercEntry]):
     __log = logging.getLogger(__name__ + '.TerytCache')
 
     def __init__(self):
-        super(TerytCache, self).__init__(TERYT_TERYT_DB, TercEntry)
+        super(TerytCache, self).__init__(TERYT_TERYT_DB)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, TercEntry]:
         self.__log.info("Downloading TERC version: %s", _int_to_datetime(version))
@@ -1018,11 +1018,11 @@ def teryt() -> Cache[TercEntry]:
     return TerytCache().get_cache(allow_stale=True)
 
 
-class UlicCache(BaseTerytCache):
+class UlicCache(BaseTerytCache[UlicMultiEntry]):
     __log = logging.getLogger(__name__ + '.UlicCache')
 
     def __init__(self):
-        super(UlicCache, self).__init__(TERYT_ULIC_DB, UlicMultiEntry)
+        super(UlicCache, self).__init__(TERYT_ULIC_DB)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, UlicMultiEntry]:
         self.__log.info("Downloading SIMC version %s", _int_to_datetime(version))

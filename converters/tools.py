@@ -93,10 +93,9 @@ class VersionedCache(typing.Generic[T]):
     """
     __log = logging.getLogger(__name__)
 
-    def __init__(self, path: str, entry_class: T):
+    def __init__(self, path: str):
         self.path = path
         self.version_ttl = 0
-        self.entry_class = entry_class
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, T]:
         raise NotImplementedError

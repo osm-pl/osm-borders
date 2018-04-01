@@ -32,7 +32,7 @@ class GeoSerializer(Serializer):
         return geobuf.encode(dct)
 
 
-class BasePrgCache(VersionedCache):
+class BasePrgCache(VersionedCache[T]):
     """
     Class for caching PRG borders. All borders are stored as GeoJSON dicts
     """
@@ -52,25 +52,25 @@ class BasePrgCache(VersionedCache):
         return self.create_cache(target_version)
 
 
-class GminyCache(BasePrgCache):
+class GminyCache(BasePrgCache[typing.Dict]):
     def __init__(self):
-        super(GminyCache, self).__init__(_GMINY_CACHE_NAME, dict)
+        super(GminyCache, self).__init__(_GMINY_CACHE_NAME)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, dict]:
         return get_layer('gminy', 'jpt_kod_je')
 
 
-class PowiatyCache(BasePrgCache):
+class PowiatyCache(BasePrgCache[typing.Dict]):
     def __init__(self):
-        super(PowiatyCache, self).__init__(_POWIATY_CACHE_NAME, dict)
+        super(PowiatyCache, self).__init__(_POWIATY_CACHE_NAME)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, dict]:
         return get_layer('powiaty', 'jpt_kod_je')
 
 
-class WojewodztwaCache(BasePrgCache):
+class WojewodztwaCache(BasePrgCache[typing.Dict]):
     def __init__(self):
-        super(WojewodztwaCache, self).__init__(_WOJEWODZTWA_CACHE_NAME, dict)
+        super(WojewodztwaCache, self).__init__(_WOJEWODZTWA_CACHE_NAME)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, dict]:
         return get_layer('województwa', 'jpt_kod_je')
