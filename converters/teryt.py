@@ -749,6 +749,7 @@ class UlicMultiEntry(object):
         self.cecha = new_cecha
         self.nazwa = new_nazwa
 
+    @property
     def solr_json(self) -> tuple:
         sorted_entries = list(sorted(self.entries.values(), key=lambda x: x.miejscowosc))
         return (
