@@ -462,16 +462,16 @@ class SimcEntry(object):
         return wmrodz()[self.rm_id]
 
     def update_from(self, new: typing.Dict[str, str]):
-        if 'woj' in new:
+        if new.get('woj'):
             self.terc = ensure_2_digits(new['woj']) + ensure_2_digits(new['pow']) + ensure_2_digits(new['gmi']) + \
                         "{0:1}".format(new['rodz'])
 
-        if 'rodzajmiejscowosci' in new:
-            self.rm_id = ensure_2_digits(new.get('rodzajmiejscowosci', 0))
-        if 'nazwa' in new:
+        if new.get('rodzajmiejscowosci'):
+            self.rm_id = ensure_2_digits(new.get('rodzajmiejscowosci') or 0)
+        if new.get('nazwa'):
             self.nazwa = new['nazwa']
 
-        if 'identyfikatormiejscowoscipodstawowej' in new:
+        if new.get('identyfikatormiejscowoscipodstawowej'):
             self.parent = str(new['identyfikatormiejscowoscipodstawowej'])
             if self.parent == self.sym:
                 self.parent = None
