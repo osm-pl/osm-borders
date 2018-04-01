@@ -16,7 +16,7 @@ import tqdm
 import zeep
 from zeep.wsse.username import UsernameToken
 
-import converters.tools
+from .tools import VersionedCache
 from .teryt_pb2 import \
     TercEntry as TercEntry_pb, \
     SimcEntry as SimcEntry_pb, \
@@ -773,7 +773,7 @@ def wmrodz() -> Cache[str]:
     return get_cache_manager().get_cache(TERYT_WMRODZ_DB)
 
 
-class BaseTerytCache(converters.tools.VersionedCache):
+class BaseTerytCache(VersionedCache):
     __log = logging.getLogger(__name__ + '.BaseTerytCache')
     change_handlers = dict()
 
