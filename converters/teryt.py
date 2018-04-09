@@ -1,3 +1,4 @@
+import atexit
 import base64
 import calendar
 import contextlib
@@ -5,22 +6,25 @@ import datetime
 import functools
 import io
 import logging
+import pathlib
+import tempfile
 import typing
 import zipfile
 from xml.etree import ElementTree as ET
 from xml.etree.ElementTree import Element
 from xml.etree.ElementTree import tostring
 
+import lxml.etree
 import requests
 import tqdm
 import zeep
 from zeep.wsse.username import UsernameToken
 
-from .tools import VersionedCache, CacheNotInitialized
 from .teryt_pb2 import \
     TercEntry as TercEntry_pb, \
     SimcEntry as SimcEntry_pb, \
     UlicMultiEntry as UlicMultiEntry_pb
+from .tools import VersionedCache, CacheNotInitialized
 from .tools import groupby, get_cache_manager, ProtoSerializer, Cache
 
 TERYT_SIMC_DB = 'osm_teryt_simc_v1'
@@ -793,39 +797,57 @@ def wmrodz() -> Cache[str]:
         return get_cache_manager().get_cache(TERYT_WMRODZ_DB)
 
 
+def lxml_iter_cleaner(iter):
+    for ret in iter:
+        yield ret
+        elem = ret[1]
+        while elem.getprevious() is not None:
+            del elem.getparent()[0]
+
+
 class BaseTerytCache(VersionedCache[T]):
     __log = logging.getLogger(__name__ + '.BaseTerytCache')
     change_handlers = dict()
 
     @staticmethod
-    def convert_binary_data(data) -> bytes:
-        return _zip_read(base64.decodebytes(data.plik_zawartosc.encode('utf-8')))
+    def convert_binary_data(data) -> tempfile.NamedTemporaryFile:
+        file_handle = tempfile.NamedTemporaryFile("w+b", prefix="osm_teryt_temp")
+        file_handle.write(_zip_read(base64.decodebytes(data.plik_zawartosc.encode('utf-8'))))
+        file_handle.flush()
+        atexit.register(file_handle.close)
+        return file_handle
 
     @staticmethod
-    def _data_to_dict(data, cls: typing.Callable[[typing.Any], typing.Type[T]]) -> typing.Dict[str, T]:
-        tree = ET.fromstring(data)
+    def _data_to_dict(data_path: pathlib.Path, cls: typing.Callable[[typing.Any], typing.Type[T]]) -> typing.Dict[str, T]:
         return dict(
-            (y.cache_key, y) for y in
-            (cls(_row_as_dict(x)) for x in tree.find('catalog').iter('row'))
+            (x.cache_key, x) for x in (
+                cls(_row_as_dict(x)) for (_, x) in lxml_iter_cleaner(
+                    lxml.etree.iterparse(data_path, events=('end',), tag='row')
+                )
+            )
         )
 
     def update_cache(self, from_version: Version, target_version: Version):
-        data = self._get_updates(from_version, target_version)
-        tree = ET.fromstring(data)
         cache = self._get_cache(from_version)
+        with self._get_updates(from_version, target_version) as data_file:
+            for event, zmiana in tqdm.tqdm(
+                    lxml_iter_cleaner(
+                        lxml.etree.iterparse(
+                            data_file.name, events=('end',), tag='zmiana')
+                    ),
+                    desc="Processing changes"
+            ):
+                operation = zmiana.find('TypKorekty').text
+                handler = self.change_handlers.get(operation)
+                if not handler:
+                    raise ValueError("Unkown TypKorekty: %s, expected one of: %s.",
+                                     operation,
+                                     ", ".join(self.change_handlers.keys()))
+                handler(self, cache, zmiana)
 
-        for zmiana in tqdm.tqdm(tree.findall('zmiana'), desc="Processing changes"):
-            operation = zmiana.find('TypKorekty').text
-            handler = self.change_handlers.get(operation)
-            if not handler:
-                raise ValueError("Unkown TypKorekty: %s, expected one of: %s.",
-                                 operation,
-                                 ", ".join(self.change_handlers.keys()))
-            handler(self, cache, zmiana)
+            self.mark_ready(target_version)
 
-        self.mark_ready(target_version)
-
-    def _get_updates(self, from_version: Version, target_version: Version):
+    def _get_updates(self, from_version: Version, target_version: Version) -> pathlib.Path:
         raise NotImplementedError
 
 
@@ -837,15 +859,13 @@ class SimcCache(BaseTerytCache[SimcEntry]):
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, SimcEntry]:
         self.__log.info("Downloading SIMC version: %s", _int_to_datetime(version))
-        with contextlib.closing(requests.Session()) as session:
-            return self._data_to_dict(
+        with contextlib.closing(requests.Session()) as session, \
                 self.convert_binary_data(
                     _get_teryt_client(session).service.PobierzKatalogSIMC(_int_to_datetime(version))
-                ),
-                SimcEntry
-            )
+                ) as data_file:
+            return self._data_to_dict(data_file.name, SimcEntry)
 
-    def _get_updates(self, from_version: Version, target_version: Version):
+    def _get_updates(self, from_version: Version, target_version: Version) -> tempfile.NamedTemporaryFile:
         self.__log.info("Downloading SIMC updates from %s to %s", _int_to_datetime(from_version),
                         _int_to_datetime(target_version))
         with contextlib.closing(requests.Session()) as session:
@@ -940,15 +960,13 @@ class TerytCache(BaseTerytCache[TercEntry]):
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, TercEntry]:
         self.__log.info("Downloading TERC version: %s", _int_to_datetime(version))
-        with contextlib.closing(requests.Session()) as session:
-            return self._data_to_dict(
+        with contextlib.closing(requests.Session()) as session, \
                 self.convert_binary_data(
                     _get_teryt_client(session).service.PobierzKatalogTERC(_int_to_datetime(version))
-                ),
-                TercEntry
-            )
+                ) as data_file:
+            return self._data_to_dict(data_file.name, TercEntry)
 
-    def _get_updates(self, from_version: Version, target_version: Version):
+    def _get_updates(self, from_version: Version, target_version: Version) -> tempfile.NamedTemporaryFile:
         self.__log.info("Downloading TERC updates from %s to %s", _int_to_datetime(from_version),
                         _int_to_datetime(target_version))
         with contextlib.closing(requests.Session()) as session:
@@ -1031,20 +1049,19 @@ class UlicCache(BaseTerytCache[UlicMultiEntry]):
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, UlicMultiEntry]:
         self.__log.info("Downloading SIMC version %s", _int_to_datetime(version))
-        with contextlib.closing(requests.Session()) as session:
-            tree = ET.fromstring(
+        with contextlib.closing(requests.Session()) as session, \
                 self.convert_binary_data(
                     _get_teryt_client(session).service.PobierzKatalogULIC(_int_to_datetime(version))
-                )
-            )
+                ) as file_path:
             grouped = groupby(
-                    (UlicEntry(_row_as_dict(x)) for x in tree.find('catalog').iter('row')),
+                    (UlicEntry(_row_as_dict(x)) for (_, x) in
+                     lxml_iter_cleaner(lxml.etree.iterparse(file_path.name, events=('end',), tag='row'))),
                     lambda x: x.sym_ul
             )
 
             return dict((key, UlicMultiEntry.from_list(value)) for key, value in grouped.items())
 
-    def _get_updates(self, from_version: Version, target_version: Version):
+    def _get_updates(self, from_version: Version, target_version: Version) -> tempfile.NamedTemporaryFile:
         self.__log.info("Downloading SIMC updates from %s to %s", _int_to_datetime(from_version),
                         _int_to_datetime(target_version))
         with contextlib.closing(requests.Session()) as session:

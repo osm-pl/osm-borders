@@ -6,6 +6,7 @@ flask
 flask-lambda
 fiona
 geobuf
+lxml
 lz4
 overpy
 protobuf

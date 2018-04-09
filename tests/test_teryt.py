@@ -29,11 +29,11 @@ class TerytTests(unittest.TestCase):
         self.assertEqual(1507420800, ret)
 
     def test_update(self):
-        data = converters.teryt.UlicCache()._get_updates(
+        data_file = converters.teryt.UlicCache()._get_updates(
             converters.teryt._date_to_int(datetime.date(2017, 10, 4)),
             converters.teryt._date_to_int(datetime.date(2017, 10, 6))
         )
-        tree = ET.fromstring(data)
+        tree = ET.parse(data_file.name)
         self.assertEqual(90, len(tree.findall('zmiana')))
 
     def test_create_simc(self):
@@ -119,7 +119,7 @@ class TerytTests(unittest.TestCase):
 
         # test
         with open("simc_1483228800.xml", "rb") as f:
-            data = converters.teryt.SimcCache()._data_to_dict(f.read(), converters.teryt.SimcEntry)
+            data = converters.teryt.SimcCache()._data_to_dict(f.name, converters.teryt.SimcEntry)
         converters.teryt.SimcCache().create_cache(version=1483228800, data=data)
         converters.teryt.SimcCache().get_cache(allow_stale=False, version=1514851200)
         converters.teryt.SimcCache().verify()
@@ -128,7 +128,7 @@ class TerytTests(unittest.TestCase):
 
         # test
         with open("terc_1483228800.xml", "rb") as f:
-            data = converters.teryt.TerytCache()._data_to_dict(f.read(), converters.teryt.TercEntry)
+            data = converters.teryt.TerytCache()._data_to_dict(f.name, converters.teryt.TercEntry)
         converters.teryt.TerytCache().create_cache(version=1483228800, data=data)
         del data
         converters.teryt.TerytCache().get_cache(allow_stale=False, version=1514851200)
