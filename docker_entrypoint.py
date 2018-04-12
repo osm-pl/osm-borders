@@ -69,7 +69,7 @@ def main():
         parser.print_usage()
         return
 
-    teryt_entry = teryt.teryt[terc]
+    teryt_entry = teryt.TerytCache().get_cache().get(terc)
     __log.info("Working with {0} {1}".format(teryt_entry.rodz_nazwa, teryt_entry.nazwa))
 
     if args.mode == 'all_borders':
