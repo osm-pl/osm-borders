@@ -236,10 +236,10 @@ def redirect_to_self(e):
 
 def start_rest_server():
     ADMINS = ['logi-osm@vink.pl']
-    DEBUG = bool(os.environ.get_cache('DEBUG', False))
+    DEBUG = bool(os.environ.get('DEBUG', False))
     os.sys.stderr.write("Debug mode: {0}\n".format(DEBUG))
-    MAILLOG = bool(os.environ.get_cache('MAILLOG', False))
-    MAILHOST = os.environ.get_cache('MAILHOST', '127.0.0.1')
+    MAILLOG = bool(os.environ.get('MAILLOG', False))
+    MAILHOST = os.environ.get('MAILHOST', '127.0.0.1')
     os.sys.stderr.write("Mail logging mode: {0}. SMTP host: {1}\n".format(MAILLOG, MAILHOST))
     if MAILLOG:
         from logging.handlers import SMTPHandler
