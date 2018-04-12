@@ -9,7 +9,6 @@ from flask import request, redirect, url_for, render_template
 from flask_lambda import FlaskLambda
 
 import borders.borders
-import threading
 from converters import teryt, tools
 
 import logging
@@ -119,35 +118,7 @@ else:
         return decorating_function
 
 
-def async_call(*, timeout: int):
-
-    def decorating_function(user_function):
-        class TimeoutedThread(threading.Thread):
-            def __init__(self, args, kwargs):
-                self.args = args
-                self.kwargs = kwargs
-                self.ret = None
-                super(TimeoutedThread, self).__init__()
-
-            def run(self):
-                self.ret = user_function(*self.args, **self.kwargs)
-
-        @wraps(user_function)
-        def wrapper(*args, **kwargs):
-            t = TimeoutedThread(args=args, kwargs=kwargs)
-            t.start()
-            t.join(timeout)
-            ret = t.ret
-            if ret:
-                return ret
-            else:
-                logger.error("Timeout waiting for response")
-                raise TimeoutError()
-        return wrapper
-    return decorating_function
-
 @app.route("/osm-borders/all/<terc>.osm", methods=["GET", ])
-@async_call(timeout=45)
 @dynamo_cache(table_name=PRG_GMINY_CACHE_V_, cache_key='terc', cache_bucket='all_borders')
 def get_all_borders(*, terc):
     resp = make_response(borders.borders.get_borders(terc), 200)
@@ -156,7 +127,6 @@ def get_all_borders(*, terc):
 
 
 @app.route("/osm-borders/nosplit/<terc>.osm", methods=["GET", ])
-@async_call(timeout=45)
 @dynamo_cache(table_name=PRG_GMINY_CACHE_V_, cache_key='terc', cache_bucket='nosplit_borders')
 def get_nosplit_borders(*, terc):
     resp = make_response(borders.borders.get_borders(terc, borders_mapping=lambda x: x, do_clean_borders=False), 200)
@@ -170,7 +140,6 @@ def error(stuff):
 
 
 @app.route("/osm-borders/<terc>.osm", methods=["GET", ])
-@async_call(timeout=45)
 @dynamo_cache(table_name=PRG_GMINY_CACHE_V_, cache_key='terc', cache_bucket='lvl8_borders')
 def get_lvl8_borders(*, terc):
     brd = borders.borders.get_borders(terc, lambda x: x.tags.get('admin_level') == "8")
@@ -180,7 +149,6 @@ def get_lvl8_borders(*, terc):
 
 
 @app.route("/osm-borders/prg/gminy/<terc>.osm", methods=["GET", ])
-@async_call(timeout=45)
 @dynamo_cache(table_name=PRG_GMINY_CACHE_V_, cache_key='terc', cache_bucket='gminy')
 def get_gminy(*, terc):
     resp = make_response(borders.borders.gminy_prg_as_osm(terc), 200)
