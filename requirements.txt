@@ -4,7 +4,7 @@ bs4
 cachetools
 flask
 flask-lambda
-fiona
+Fiona==1.7.6
 geobuf
 lxml
 lz4
