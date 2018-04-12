@@ -1,3 +1,6 @@
+import functools
+import threading
+
 import collections
 import dbm
 import json
@@ -17,6 +20,17 @@ if os.environ.get('USE_AWS'):
 
 
 T = typing.TypeVar('T')
+
+
+def synchronized(wrapped):
+    lock = threading.RLock()
+
+    @functools.wraps(wrapped)
+    def _wrapper(*args, **kwargs):
+        with lock:
+            return wrapped(*args, **kwargs)
+
+    return _wrapper
 
 
 class CacheError(Exception):
@@ -70,6 +84,7 @@ class Cache(typing.Generic[T]):
     def delete(self, name: str):
         raise NotImplementedError
 
+    @synchronized
     def reload(self, contents: typing.Dict[str, T]):
         for key, value in tqdm.tqdm(contents.items(), desc="Reloading cache"):
             self.add(key, value)
@@ -142,6 +157,7 @@ class VersionedCache(typing.Generic[T]):
             self.create_cache()
             return self.get_cache(allow_stale=allow_stale, version=version)
 
+    @synchronized
     def create_cache(self, version: Version = None, data=None):
         if not version:
             version = self.current_cache_version()
@@ -264,6 +280,7 @@ class DynamoCache(Cache):
 
         )
 
+    @synchronized
     def reload(self, contents: dict):
         old_capacity = self._table.provisioned_throughput['WriteCapacityUnits']
         try:
@@ -520,5 +537,4 @@ def join(lst: typing.List[str], delimeter: str = ',', escape_char: str = '\\') -
             lst
         )
     )
-
 

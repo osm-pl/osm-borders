@@ -25,7 +25,7 @@ from .teryt_pb2 import \
     SimcEntry as SimcEntry_pb, \
     UlicMultiEntry as UlicMultiEntry_pb
 from .tools import VersionedCache, CacheNotInitialized
-from .tools import groupby, get_cache_manager, ProtoSerializer, Cache
+from .tools import groupby, get_cache_manager, ProtoSerializer, Cache, synchronized
 
 TERYT_SIMC_DB = 'osm_teryt_simc_v1'
 
@@ -827,6 +827,7 @@ class BaseTerytCache(VersionedCache[T]):
             )
         )
 
+    @synchronized
     def update_cache(self, from_version: Version, target_version: Version):
         cache = self._get_cache(from_version)
         with self._get_updates(from_version, target_version) as data_file:

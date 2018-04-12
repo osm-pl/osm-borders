@@ -17,7 +17,7 @@ import requests
 import time
 import tqdm
 
-from converters.tools import Version, VersionedCache, T, Serializer
+from converters.tools import Version, VersionedCache, T, Serializer, synchronized
 
 _GMINY_CACHE_NAME = 'osm_prg_gminy_v1'
 _POWIATY_CACHE_NAME = 'osm_prg_powiaty_v1'
@@ -102,6 +102,7 @@ def get_prg_filename() -> typing.Tuple[str, int]:
     return link.get('href'), calendar.timegm(time.strptime(version, '%d-%m-%Y'))
 
 
+@synchronized
 @functools.lru_cache(maxsize=1)
 def download_prg_file() -> str:
     path = tempfile.mkdtemp(prefix="prg")
