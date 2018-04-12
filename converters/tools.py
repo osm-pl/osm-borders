@@ -139,6 +139,7 @@ class VersionedCache(typing.Generic[T]):
             serializer=self._get_serializer()
         )
 
+    @synchronized
     def get_cache(self, allow_stale: bool = False, version: int = None) -> Cache[T]:
         if not version:
             version = self.current_cache_version()
