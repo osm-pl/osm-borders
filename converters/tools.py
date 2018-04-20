@@ -164,8 +164,6 @@ class VersionedCache(typing.Generic[T]):
             version = self.current_cache_version()
         if not data:
             data = self._get_cache_data(version)
-        # with open("/tmp/test_data_{}_{}".format(self.path, version), "wb+") as f:
-        #    f.write(data)
         cache = get_cache_manager().create_cache(self.path, serializer=self._get_serializer())
         cache.reload(data)
         self.mark_ready(version)
@@ -382,8 +380,8 @@ class CacheManager(object):
         if cache['status'] != 'ready':
             raise CacheNotInitialized(name)
 
+        ret = self.cache_driver.get_table(name, serializer)
         if (version and cache['version'] >= version) or not version or version < 0:
-            ret = self.cache_driver.get_table(name, serializer)
             return ret
 
         raise CacheExpired("Cache {0} not ready though metadata (status = {1}, version = {2} < requested {3} ".format(
