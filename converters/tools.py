@@ -90,7 +90,10 @@ class Cache(typing.Generic[T]):
             self.add(key, value)
 
     def __getitem__(self, item):
-        return self.get(item)
+        ret = self.get(item)
+        if not ret:
+            raise KeyError("Item {} not found in cache".format(item))
+        return ret
 
     def __setitem__(self, key, value):
         self.add(key, value)
@@ -150,7 +153,7 @@ class VersionedCache(typing.Generic[T]):
                 self.__log.warning("Using stale version (%s) of cache %s. Consider updating.",
                                    self.file_cache_version(),
                                    self.path)
-                return self._get_cache(cache_version=-1)
+                return self._get_cache(cache_version=Version(-1))
             self.update_cache(self.file_cache_version(), version)
             self.mark_ready(version)
             return self.get_cache(allow_stale=allow_stale, version=version)
@@ -170,7 +173,7 @@ class VersionedCache(typing.Generic[T]):
         self.__log.info("%s dictionary created", self.path)
 
     def verify(self):
-        cache = self._get_cache(cache_version=-1)
+        cache = self._get_cache(cache_version=Version(-1))
         errors = 0
         for key, value in tqdm.tqdm(self._get_cache_data(self.file_cache_version()).items(), "Verifying cache"):
             cache_entry = cache.get(key)
@@ -536,4 +539,3 @@ def join(lst: typing.List[str], delimeter: str = ',', escape_char: str = '\\') -
             lst
         )
     )
-
