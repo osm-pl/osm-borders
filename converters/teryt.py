@@ -7,6 +7,7 @@ import functools
 import io
 import logging
 import pathlib
+import shutil
 import tempfile
 import typing
 import zipfile
@@ -64,8 +65,9 @@ def _get_teryt_client(session: requests.Session = requests.Session()) -> zeep.Cl
     return zeep.Client(wsdl=wsdl, wsse=wsse, transport=zeep.Transport(session=session))
 
 
-def _get_dict(data: bytes, cls: typing.Callable[[typing.Any], typing.Type[T]]) -> typing.Iterable[T]:
+def _get_dict(data: bytes, cls: typing.Type[T]) -> typing.Iterable[T]:
     tree = ET.fromstring(data)
+    # noinspection PyCallingNonCallable
     return (cls(_row_as_dict(x)) for x in tree.find('catalog').iter('row'))
 
 
@@ -89,11 +91,11 @@ def nvl(obj, substitute):
 
 
 def _int_to_datetime(x: Version) -> datetime.date:
-    return datetime.date.fromtimestamp(x)
+    return datetime.date.fromtimestamp(int(x))
 
 
 def _date_to_int(version: datetime.date) -> Version:
-    return calendar.timegm(version.timetuple())
+    return Version(calendar.timegm(version.timetuple()))
 
 
 # structure:
@@ -414,7 +416,7 @@ class SimcEntry(object):
     def from_update_dict(dct: dict) -> 'SimcEntry':
         ret = SimcEntry()
         ret.terc = ensure_2_digits(dct['woj']) + ensure_2_digits(dct['pow']) + ensure_2_digits(dct['gmi']) + \
-                   "{0:1}".format(dct['rodz'])
+            "{0:1}".format(dct['rodz'])
         ret.rm_id = ensure_2_digits(dct.get('rodzajmiejscowosci', 0))
         ret.nazwa = dct.get('nazwa')
         ret.sym = "{0:07}".format(int(dct['identyfikator']))
@@ -523,11 +525,10 @@ class UlicEntry(object):
         self.sym_ul = dct.get('sym_ul')
         self.cecha_orig = dct.get('cecha')
         self.nazwa_1 = nvl(dct.get('nazwa_1'), '')
+        self._nazwa_1 = ""
         self.nazwa_2 = nvl(dct.get('nazwa_2'), '')
+        self._nazwa_2 = ""
         self.terc = dct.get('woj') + dct.get('pow') + dct.get('gmi') + dct.get('rodz_gmi')
-        # assert self.terc == dct.get('woj') + dct.get('pow') + dct.get('gmi') + \
-        #    dct.get('rodz_gmi'), "City terc code: {0} != {1} (terc code from ulic".format(
-        #    self.terc, dct.get('woj') + dct.get('pow') + dct.get('gmi') + dct.get('rodz_gmi'))
 
     @property
     def nazwa_1(self):
@@ -784,6 +785,7 @@ def __wmrodz_create():
     version = TerytCache().current_cache_version()
     data = _wmrodz_binary(_int_to_datetime(version))
     cache = get_cache_manager().create_cache(TERYT_WMRODZ_DB)
+    # noinspection PyUnresolvedReferences
     cache.reload(dict((x.rm, x.nazwa_rm) for x in _get_dict(data, BasicEntry)))
     get_cache_manager().mark_ready(TERYT_WMRODZ_DB, version)
     __log.info("WMRODZ dictionary created")
@@ -797,14 +799,15 @@ def wmrodz() -> Cache[str]:
         return get_cache_manager().get_cache(TERYT_WMRODZ_DB)
 
 
-def lxml_iter_cleaner(iter):
-    for ret in iter:
+def lxml_iter_cleaner(itr):
+    for ret in itr:
         yield ret
         elem = ret[1]
         while elem.getprevious() is not None:
             del elem.getparent()[0]
 
 
+# noinspection PyAbstractClass
 class BaseTerytCache(VersionedCache[T]):
     __log = logging.getLogger(__name__ + '.BaseTerytCache')
     change_handlers = dict()
@@ -818,7 +821,8 @@ class BaseTerytCache(VersionedCache[T]):
         return file_handle
 
     @staticmethod
-    def _data_to_dict(data_path: pathlib.Path, cls: typing.Callable[[typing.Any], typing.Type[T]]) -> typing.Dict[str, T]:
+    def _data_to_dict(data_path: pathlib.Path, cls: typing.Type[T]) -> typing.Dict[str, T]:
+        # noinspection PyCallingNonCallable
         return dict(
             (x.cache_key, x) for x in (
                 cls(_row_as_dict(x)) for (_, x) in lxml_iter_cleaner(
@@ -830,23 +834,28 @@ class BaseTerytCache(VersionedCache[T]):
     @synchronized
     def update_cache(self, from_version: Version, target_version: Version):
         cache = self._get_cache(from_version)
-        with self._get_updates(from_version, target_version) as data_file:
-            for event, zmiana in tqdm.tqdm(
-                    lxml_iter_cleaner(
-                        lxml.etree.iterparse(
-                            data_file.name, events=('end',), tag='zmiana')
-                    ),
-                    desc="Processing changes"
-            ):
-                operation = zmiana.find('TypKorekty').text
-                handler = self.change_handlers.get(operation)
-                if not handler:
-                    raise ValueError("Unkown TypKorekty: %s, expected one of: %s.",
-                                     operation,
-                                     ", ".join(self.change_handlers.keys()))
-                handler(self, cache, zmiana)
+        # noinspection PyBroadException
+        try:
+            with self._get_updates(from_version, target_version) as data_file:
+                for event, zmiana in tqdm.tqdm(
+                        lxml_iter_cleaner(
+                            lxml.etree.iterparse(
+                                data_file.name, events=('end',), tag='zmiana')
+                        ),
+                        desc="Processing changes"
+                ):
+                    operation = zmiana.find('TypKorekty').text
+                    handler = self.change_handlers.get(operation)
+                    if not handler:
+                        raise ValueError("Unkown TypKorekty: %s, expected one of: %s.",
+                                         operation,
+                                         ", ".join(self.change_handlers.keys()))
+                    handler(self, cache, zmiana)
 
-            self.mark_ready(target_version)
+                self.mark_ready(target_version)
+        except:
+            # if there is exception updating the cache - create it from scratch
+            self.create_cache()
 
     def _get_updates(self, from_version: Version, target_version: Version) -> pathlib.Path:
         raise NotImplementedError
@@ -1036,7 +1045,6 @@ class TerytCache(BaseTerytCache[TercEntry]):
     }
 
 
-
 @functools.lru_cache(maxsize=1)
 def teryt() -> Cache[TercEntry]:
     return TerytCache().get_cache(allow_stale=True)
@@ -1055,9 +1063,9 @@ class UlicCache(BaseTerytCache[UlicMultiEntry]):
                     _get_teryt_client(session).service.PobierzKatalogULIC(_int_to_datetime(version))
                 ) as file_path:
             grouped = groupby(
-                    (UlicEntry(_row_as_dict(x)) for (_, x) in
-                     lxml_iter_cleaner(lxml.etree.iterparse(file_path.name, events=('end',), tag='row'))),
-                    lambda x: x.sym_ul
+                (UlicEntry(_row_as_dict(x)) for (_, x) in
+                 lxml_iter_cleaner(lxml.etree.iterparse(file_path.name, events=('end',), tag='row'))),
+                lambda x: x.sym_ul
             )
 
             return dict((key, UlicMultiEntry.from_list(value)) for key, value in grouped.items())
@@ -1173,13 +1181,17 @@ class UlicCache(BaseTerytCache[UlicMultiEntry]):
         old = UlicEntry.from_update(update_record_to_dict(obj, 'Przed'))
         cache_entry = cache.get(old.sym_ul)
         new_dict = update_record_to_dict(obj, 'Po')
+        ulic_entry = None
         for ulic_entry in cache_entry.get_all():
             ulic_entry.update_from(new_dict)
 
-        cache_entry.sym_ul = ulic_entry.sym_ul
-        cache_entry.cecha = ulic_entry.cecha
-        cache_entry.nazwa = ulic_entry.nazwa
-        cache.add(cache_entry.sym_ul, cache_entry)
+        if ulic_entry:
+            cache_entry.sym_ul = ulic_entry.sym_ul
+            cache_entry.cecha = ulic_entry.cecha
+            cache_entry.nazwa = ulic_entry.nazwa
+            cache.add(cache_entry.sym_ul, cache_entry)
+        else:
+            raise KeyError("No ulic entries for symul: " + old.sym_ul)
 
     change_handlers = {
         'D': _handle_d,
