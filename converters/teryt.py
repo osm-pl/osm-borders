@@ -235,7 +235,7 @@ class TercEntry(object):
         return ""
 
     @property
-    def solr_json(self) -> tuple:
+    def solr_json(self) -> typing.Tuple[str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]]:
         return (
             "add", {
                 "doc": {
@@ -433,7 +433,7 @@ class SimcEntry(object):
         return False
 
     @property
-    def solr_json(self) -> tuple:
+    def solr_json(self) -> typing.Tuple[str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]]:
         return (
             "add", {
                 "doc": {
@@ -610,7 +610,7 @@ class UlicEntry(object):
         return ret
 
     @property
-    def solr_json(self) -> tuple:
+    def solr_json(self) -> typing.Tuple[str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]]:
         return (
             "add", {
                 "doc": {
@@ -755,7 +755,7 @@ class UlicMultiEntry(object):
         self.nazwa = new_nazwa
 
     @property
-    def solr_json(self) -> tuple:
+    def solr_json(self) -> typing.Tuple[str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]]:
         sorted_entries = list(sorted(self.entries.values(), key=lambda x: x.miejscowosc))
         return (
             "add", {
