@@ -524,10 +524,10 @@ class UlicEntry(object):
         self.sym = dct.get('sym')
         self.sym_ul = dct.get('sym_ul')
         self.cecha_orig = dct.get('cecha')
-        self.nazwa_1 = nvl(dct.get('nazwa_1'), '')
         self._nazwa_1 = ""
-        self.nazwa_2 = nvl(dct.get('nazwa_2'), '')
         self._nazwa_2 = ""
+        self.nazwa_1 = nvl(dct.get('nazwa_1'), '')
+        self.nazwa_2 = nvl(dct.get('nazwa_2'), '')
         self.terc = dct.get('woj') + dct.get('pow') + dct.get('gmi') + dct.get('rodz_gmi')
 
     @property
