@@ -201,7 +201,7 @@ class CacheDriver:
 
 
 class ShelveCache(Cache):
-    def __init__(self, shlv, serializer: Serializer):
+    def __init__(self, shlv: shelve.Shelf, serializer: Serializer):
         self.shelve = shlv
         self.serializer = serializer
 
@@ -215,6 +215,7 @@ class ShelveCache(Cache):
 
     def add(self, name: str, value: dict):
         self.shelve[name] = self.serializer.serialize(value)
+        self.shelve.sync()
 
     def delete(self, name: str):
         del self.shelve[name]
@@ -364,6 +365,7 @@ class CacheManager(object):
     def __init__(self, cache_driver: CacheDriver):
         self.cache_driver = cache_driver
         meta = self.cache_driver.get_or_create('meta')
+        self.open_caches = {}  # type: typing.Dict[str, typing.Optional[Cache]]
 
         if not meta:
             raise ValueError("Cache metadata not initialized")
@@ -375,6 +377,9 @@ class CacheManager(object):
         if name == "meta":
             raise ValueError("Forbidden cache name: meta")
 
+        if name in self.open_caches:
+            return self.open_caches[name]
+
         cache = self.meta.get(name)
 
         if not cache:
@@ -385,6 +390,7 @@ class CacheManager(object):
 
         ret = self.cache_driver.get_table(name, serializer)
         if (version and cache['version'] >= version) or not version or version < 0:
+            self.open_caches[name] = ret
             return ret
 
         raise CacheExpired("Cache {0} not ready though metadata (status = {1}, version = {2} < requested {3} ".format(
