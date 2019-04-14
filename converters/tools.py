@@ -200,6 +200,47 @@ class CacheDriver:
         raise NotImplementedError
 
 
+class MemoryCache(Cache):
+    def __init__(self):
+        self.cache = {}
+
+    def get(self, name: str, default: dict = None) -> typing.Optional[dict]:
+        return self.cache.get(name, default)
+
+    def add(self, name: str, value: dict):
+        self.cache[name] = value
+
+    def delete(self, name: str):
+        del self.cache[name]
+
+    def keys(self) -> typing.Iterable:
+        return self.cache.keys()
+
+
+class MemoryCacheDriver(CacheDriver):
+    def __init__(self):
+        self.caches = {}  # type: typing.Dict[str, MemoryCache]
+
+    def get_table(self, name: str, serializer: Serializer = JsonSerializer()) -> MemoryCache:
+        try:
+            return self.caches[name]
+        except KeyError:
+            raise CacheNotInitialized(name)
+
+    def create(self, name: str, serializer: Serializer = JsonSerializer()) -> MemoryCache:
+        ret = MemoryCache()
+        self.caches[name] = ret
+        return ret
+
+    def get_or_create(self, name: str, serializer: Serializer = JsonSerializer()) -> MemoryCache:
+        if name not in self.caches:
+            ret = MemoryCache()
+            self.caches[name] = ret
+        else:
+            ret = self.caches[name]
+        return ret
+
+
 class ShelveCache(Cache):
     def __init__(self, shlv: shelve.Shelf, serializer: Serializer):
         self.shelve = shlv
@@ -215,7 +256,6 @@ class ShelveCache(Cache):
 
     def add(self, name: str, value: dict):
         self.shelve[name] = self.serializer.serialize(value)
-        self.shelve.sync()
 
     def delete(self, name: str):
         del self.shelve[name]
@@ -434,6 +474,11 @@ else:
 
 def get_cache_manager():
     return __cache_manager
+
+
+def set_cache_manager(driver: CacheDriver):
+    global __cache_manager
+    __cache_manager = CacheManager(driver)
 
 
 def groupby(lst: typing.Iterable, keyfunc=lambda x: x, valuefunc=lambda x: x):
