@@ -103,6 +103,7 @@ class Cache(typing.Generic[T]):
 
 
 Version = typing.NewType('Version', int)
+DISABLE_UPDATE = bool(os.environ.get("DISABLE_UPDATE", ""))
 
 
 class VersionedCache(typing.Generic[T]):
@@ -144,6 +145,8 @@ class VersionedCache(typing.Generic[T]):
 
     @synchronized
     def get_cache(self, allow_stale: bool = False, version: int = None) -> Cache[T]:
+        if DISABLE_UPDATE:
+            return self._get_cache(cache_version=Version(-1))
         if not version:
             version = self.current_cache_version()
         try:
