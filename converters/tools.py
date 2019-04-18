@@ -274,7 +274,7 @@ class ShelveCacheDriver(CacheDriver):
 
     def get_table(self, name: str, serializer: Serializer = JsonSerializer()) -> ShelveCache:
         try:
-            ret = shelve.open(os.path.join(self.directory, name), flag='w')
+            ret = shelve.open(os.path.join(self.directory, name), flag='r' if DISABLE_UPDATE else 'w')
             return ShelveCache(ret, serializer)
         except dbm.error:
             raise CacheNotInitialized(name)
