@@ -19,6 +19,22 @@ import tqdm
 
 from converters.tools import Version, VersionedCache, T, Serializer, synchronized
 
+__WGS84 = pyproj.Proj(proj='latlong', datum='WGS84')
+__EPSG2180 = pyproj.Proj(init="epsg:2180")
+
+if hasattr(pyproj, "Transformer"):
+    def get_transformer(from_srs: typing.Dict[str, str], to_srs: str) -> typing.Callable[[typing.Any], typing.Tuple[float, float]]:
+        transformer = pyproj.Transformer.from_proj(from_srs, to_srs).transform
+
+        def wrapper(*args):
+            return list(reversed(transformer(*args)))
+
+        return wrapper
+else:
+    def get_transformer(from_srs: typing.Dict[str, str], to_srs:str) -> typing.Callable[[typing.Any], typing.Tuple[float, float]]:
+        return functools.partial(pyproj.transform, pyproj.Proj(**from_srs), pyproj.Proj(init=to_srs))
+
+
 _GMINY_CACHE_NAME = 'osm_prg_gminy_v1'
 _POWIATY_CACHE_NAME = 'osm_prg_powiaty_v1'
 _WOJEWODZTWA_CACHE_NAME = 'osm_prg_wojewodztwa_v1'
@@ -46,7 +62,7 @@ class BasePrgCache(VersionedCache[T]):
         return GeoSerializer()
 
     def current_cache_version(self) -> Version:
-        return get_prg_filename()[1]
+        return Version(get_prg_filename()[1])
 
     def update_cache(self, from_version: Version, target_version: Version):
         return self.create_cache(target_version)
@@ -57,7 +73,7 @@ class GminyCache(BasePrgCache[typing.Dict]):
         super(GminyCache, self).__init__(_GMINY_CACHE_NAME)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, dict]:
-        return get_layer('gminy', 'jpt_kod_je')
+        return get_layer('gminy', 'JPT_KOD_JE')
 
 
 class PowiatyCache(BasePrgCache[typing.Dict]):
@@ -65,7 +81,7 @@ class PowiatyCache(BasePrgCache[typing.Dict]):
         super(PowiatyCache, self).__init__(_POWIATY_CACHE_NAME)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, dict]:
-        return get_layer('powiaty', 'jpt_kod_je')
+        return get_layer('powiaty', 'JPT_KOD_JE')
 
 
 class WojewodztwaCache(BasePrgCache[typing.Dict]):
@@ -73,7 +89,7 @@ class WojewodztwaCache(BasePrgCache[typing.Dict]):
         super(WojewodztwaCache, self).__init__(_WOJEWODZTWA_CACHE_NAME)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, dict]:
-        return get_layer('województwa', 'jpt_kod_je')
+        return get_layer('województwa', 'JPT_KOD_JE')
 
 
 __log = logging.getLogger(__name__)
@@ -139,11 +155,11 @@ def process_layer(layer_name: str, key: str, filepath: str) -> typing.Dict[str, 
     if len(dir_names) != 1:
         raise ValueError("Can't guess the directory inside zipfile. Candidates: {0}".format(", ".join(dir_names)))
 
-    with fiona.drivers():
-        dir_name = "/" + dir_names.pop()
+    with fiona.Env():
+        dir_name = "/" + dir_names.pop() + "/" if len(dir_names) > 0 else "/"
         __log.info("Converting PRG data")
-        with fiona.open(path=dir_name, vfs="zip://" + filepath, layer=layer_name, mode="r", encoding='cp1250') as data:
-            transform = functools.partial(pyproj.transform, pyproj.Proj(data.crs), pyproj.Proj(init="epsg:4326"))
+        with fiona.open("zip://" + filepath, layer=layer_name, mode="r", encoding='utf-8') as data:
+            transform = get_transformer(data.crs, "epsg:4326")
             rv = dict(
                 (x['properties'][key], project(transform, x)) for x in tqdm.tqdm(data, desc="Converting PRG data")
             )
