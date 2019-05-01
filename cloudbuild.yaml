@@ -1,0 +1,32 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'osm-borders', '.']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['run', '--name', 'osm-borders', '--entrypoint', '/usr/bin/python', 'osm-borders', '/app/init_dictionaries.py']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['commit',
+           '-c', "CMD /usr/bin/python /app/rest_server.py",
+           '-c', 'ENTRYPOINT /usr/bin/bash',
+           'osm-borders', 'osm-borders-step2'
+    ]
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['tag', 'osm-borders-step2', '${_IMAGE_NAME}']
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '${_IMAGE_NAME}']
+
+  - name: 'gcr.io/cloud-builders/gcloud'
+    args: ['beta', 'run', 'deploy', 'osm-borders',
+           '--image=${_IMAGE_NAME}',
+           '--region=us-central1',
+           '--memory=512Mi',
+           '--allow-unauthenticated',
+           '--set-env-vars=DISABLE_UPDATE=True'
+    ]
+
+images: ['${_IMAGE_NAME}']
+substitutions:
+    _IMAGE_NAME: 'gcr.io/osm-vink/osm-borders:latest'
