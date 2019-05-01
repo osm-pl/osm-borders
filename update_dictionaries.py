@@ -8,4 +8,4 @@ import converters.prg
 logging.basicConfig(level=logging.INFO)
 
 converters.teryt.update()
-#converters.prg.init()
+converters.prg.update()

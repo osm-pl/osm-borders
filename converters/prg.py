@@ -93,12 +93,17 @@ class WojewodztwaCache(BasePrgCache[typing.Dict]):
 
 
 __log = logging.getLogger(__name__)
+__all_caches__ = (GminyCache, PowiatyCache, WojewodztwaCache)
 
 
 def init():
-    GminyCache().create_cache()
-    PowiatyCache().create_cache()
-    WojewodztwaCache().create_cache()
+    for cache in __all_caches__:
+        cache().create_cache()
+
+
+def update():
+    for cache in __all_caches__:
+        cache().get_cache()
 
 
 class TqdmUpTo(tqdm.tqdm):
