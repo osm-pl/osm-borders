@@ -466,7 +466,7 @@ def gminy_prg_as_osm(terc: str):
             yield ('boundary', 'administrative')
             yield ('type', 'boundary')
             yield ('source:generator', 'osm-borders.py')
-            terc_len = len(tags['jpt_kod_je'])
+            terc_len = len(tags['JPT_KOD_JE'])
             if terc_len == 4:
                 yield ('admin_level', str(6))
             elif terc_len == 2:
@@ -475,8 +475,8 @@ def gminy_prg_as_osm(terc: str):
                 yield ('admin_level', str(7))
             else:
                 yield ('admin_level', 'TODO')
-            yield ('name', tags.get('jpt_nazwa_', ''))
-            yield ('teryt:simc', tags.get('jpt_kod_je', ''))
+            yield ('name', tags.get('JPT_NAZWA_', ''))
+            yield ('teryt:simc', tags.get('JPT_KOD_JE', ''))
             for key in ('wikidata', 'wikipedia', 'fixme'):
                 if key in tags:
                     yield (key, str(tags[key]))
