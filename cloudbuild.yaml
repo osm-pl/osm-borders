@@ -3,12 +3,12 @@ steps:
     args: ['build', '-t', 'osm-borders', '.']
 
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['run', '--name', 'osm-borders', '--entrypoint', '/usr/bin/python', 'osm-borders', '/app/init_dictionaries.py']
+    args: ['run', '--name', 'osm-borders', '--entrypoint', 'python', 'osm-borders', '/app/init_dictionaries.py']
 
   - name: 'gcr.io/cloud-builders/docker'
     args: ['commit',
-           '-c', "CMD /usr/bin/python /app/rest_server.py",
-           '-c', 'ENTRYPOINT /usr/bin/bash',
+           '-c', "CMD /app/docker-entrypoint.sh",
+           '-c', 'ENTRYPOINT "/app/docker-entrypoint.sh"',
            'osm-borders', 'osm-borders-step2'
     ]
 
@@ -30,3 +30,5 @@ steps:
 images: ['${_IMAGE_NAME}']
 substitutions:
     _IMAGE_NAME: 'gcr.io/osm-vink/osm-borders:latest'
+
+timeout: 1800s
