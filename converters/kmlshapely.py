@@ -31,20 +31,39 @@ def kml_to_shapely(data: str) -> Borders:
         __log.debug("Parsing placemark: %s", name)
         # MultiGeometry lub LinearRing?
         geo = placemark.find(ns + "MultiGeometry")
-        description = BeautifulSoup(placemark.findtext("{http://www.opengis.net/kml/2.2}description"), "html.parser")
-        tags = dict(zip(
-            map(lambda x: x.text, description.find_all('span', class_='atr-name')),
-            map(lambda x: x.text, description.find_all('span', class_='atr-value'))
-        ))
+        description = BeautifulSoup(
+            placemark.findtext("{http://www.opengis.net/kml/2.2}description"),
+            "html.parser",
+        )
+        tags = dict(
+            zip(
+                map(lambda x: x.text, description.find_all("span", class_="atr-name")),
+                map(lambda x: x.text, description.find_all("span", class_="atr-value")),
+            )
+        )
         outer = Polygon()
         inner = Polygon()
         for polygon in geo.findall(ns + "Polygon"):
             outer = cascaded_union(
-                [ring_to_shape(x) for x in polygon.findall(ns + "outerBoundaryIs/" + ns + "LinearRing")] + [outer, ])
+                [
+                    ring_to_shape(x)
+                    for x in polygon.findall(
+                        ns + "outerBoundaryIs/" + ns + "LinearRing"
+                    )
+                ]
+                + [outer]
+            )
             inner = cascaded_union(
-                [ring_to_shape(x) for x in polygon.findall(ns + "innerBoundaryIs/" + ns + "LinearRing")] + [inner, ])
+                [
+                    ring_to_shape(x)
+                    for x in polygon.findall(
+                        ns + "innerBoundaryIs/" + ns + "LinearRing"
+                    )
+                ]
+                + [inner]
+            )
         border = Feature(outer.difference(inner))
-        border.set_tag('name', name)
+        border.set_tag("name", name)
         for key, value in tags.items():
             border.set_tag(key, value)
         rv.append(border)

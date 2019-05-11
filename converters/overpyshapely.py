@@ -14,7 +14,9 @@ class OverToShape(object):
         if not lst:
             raise ValueError("No relation")
         if len(lst) > 1:
-            raise ValueError("Expected at most one relation, got: {0}".format(", ".join(lst)))
+            raise ValueError(
+                "Expected at most one relation, got: {0}".format(", ".join(lst))
+            )
         return lst[0]
 
     def get_node_feature(self, id_: int = None) -> Feature:
@@ -40,8 +42,10 @@ class OverToShape(object):
             id_ = OverToShape._default_id(self._result.relation_ids)
         relation = self._result.get_relation(id_)
         return Feature(
-            shapely.geometry.MultiLineString([OverToShape._obj_to_shapely(x) for x in relation.members]),
-            relation.tags
+            shapely.geometry.MultiLineString(
+                [OverToShape._obj_to_shapely(x) for x in relation.members]
+            ),
+            relation.tags,
         )
 
     @staticmethod
@@ -65,24 +69,38 @@ class OverToShape(object):
         if obj.nodes[0].id == obj.nodes[-1].id:
             # closed way
             return shapely.geometry.Polygon([(x.lon, x.lat) for x in obj.get_nodes()])
-        return shapely.geometry.LineString([OverToShape._node_to_shapely(x) for x in obj.get_nodes()])
+        return shapely.geometry.LineString(
+            [OverToShape._node_to_shapely(x) for x in obj.get_nodes()]
+        )
 
     @staticmethod
     def _relation_to_shapely(obj: overpy.Relation) -> shapely.geometry.Polygon:
-        if any(x.role == "inner" for x in obj.members) or any(x.role == "outer" for x in obj.members):
+        if any(x.role == "inner" for x in obj.members) or any(
+            x.role == "outer" for x in obj.members
+        ):
             inner = shapely.ops.cascaded_union(
                 shapely.ops.polygonize_full(
-                    [OverToShape._obj_to_shapely(x) for x in obj.members if x.role == "inner"]
+                    [
+                        OverToShape._obj_to_shapely(x)
+                        for x in obj.members
+                        if x.role == "inner"
+                    ]
                 )
             )
             outer = shapely.ops.cascaded_union(
                 shapely.ops.polygonize_full(
-                    [OverToShape._obj_to_shapely(x) for x in obj.members if x.role == "outer"]
+                    [
+                        OverToShape._obj_to_shapely(x)
+                        for x in obj.members
+                        if x.role == "outer"
+                    ]
                 )
             )
             return outer.difference(inner)
 
         # assume everything is outer
         return shapely.ops.cascaded_union(
-            shapely.ops.polygonize_full([OverToShape._obj_to_shapely(x) for x in obj.members])
+            shapely.ops.polygonize_full(
+                [OverToShape._obj_to_shapely(x) for x in obj.members]
+            )
         )

@@ -15,11 +15,11 @@ import tqdm
 from google.protobuf import message
 from google.protobuf.descriptor import FieldDescriptor
 
-if os.environ.get('USE_AWS'):
+if os.environ.get("USE_AWS"):
     import botocore.exceptions
 
 
-T = typing.TypeVar('T')
+T = typing.TypeVar("T")
 
 
 def synchronized(wrapped):
@@ -55,10 +55,10 @@ class Serializer(object):
 
 class JsonSerializer(Serializer):
     def serialize(self, dct: dict) -> bytes:
-        return json.dumps(dct).encode('utf-8')
+        return json.dumps(dct).encode("utf-8")
 
     def deserialize(self, data: bytes) -> dict:
-        return json.loads(data.decode('utf-8'))
+        return json.loads(data.decode("utf-8"))
 
 
 class ProtoSerializer(Serializer):
@@ -102,7 +102,7 @@ class Cache(typing.Generic[T]):
         raise NotImplementedError
 
 
-Version = typing.NewType('Version', int)
+Version = typing.NewType("Version", int)
 DISABLE_UPDATE = bool(os.environ.get("DISABLE_UPDATE", ""))
 
 
@@ -110,6 +110,7 @@ class VersionedCache(typing.Generic[T]):
     """
     Class that keeps cache updated automatically. Also - initializes cache automatically if not already created
     """
+
     __log = logging.getLogger(__name__)
 
     def __init__(self, path: str):
@@ -134,13 +135,10 @@ class VersionedCache(typing.Generic[T]):
     def _get_cache(self, cache_version: Version = None) -> Cache[T]:
         if cache_version:
             return get_cache_manager().get_cache(
-                self.path,
-                version=cache_version,
-                serializer=self._get_serializer()
+                self.path, version=cache_version, serializer=self._get_serializer()
             )
         return get_cache_manager().get_cache(
-            self.path,
-            serializer=self._get_serializer()
+            self.path, serializer=self._get_serializer()
         )
 
     @synchronized
@@ -153,9 +151,11 @@ class VersionedCache(typing.Generic[T]):
             return self._get_cache(version)
         except CacheExpired:
             if allow_stale:
-                self.__log.warning("Using stale version (%s) of cache %s. Consider updating.",
-                                   self.file_cache_version(),
-                                   self.path)
+                self.__log.warning(
+                    "Using stale version (%s) of cache %s. Consider updating.",
+                    self.file_cache_version(),
+                    self.path,
+                )
                 return self._get_cache(cache_version=Version(-1))
             self.update_cache(self.file_cache_version(), version)
             self.mark_ready(version)
@@ -170,7 +170,9 @@ class VersionedCache(typing.Generic[T]):
             version = self.current_cache_version()
         if not data:
             data = self._get_cache_data(version)
-        cache = get_cache_manager().create_cache(self.path, serializer=self._get_serializer())
+        cache = get_cache_manager().create_cache(
+            self.path, serializer=self._get_serializer()
+        )
         cache.reload(data)
         self.mark_ready(version)
         self.__log.info("%s dictionary created", self.path)
@@ -178,11 +180,16 @@ class VersionedCache(typing.Generic[T]):
     def verify(self):
         cache = self._get_cache(cache_version=Version(-1))
         errors = 0
-        for key, value in tqdm.tqdm(self._get_cache_data(self.file_cache_version()).items(), "Verifying cache"):
+        for key, value in tqdm.tqdm(
+            self._get_cache_data(self.file_cache_version()).items(), "Verifying cache"
+        ):
             cache_entry = cache.get(key)
             if not cache_entry == value:
                 self.__log.warning(
-                    "Elements doesn't match: (original) {} != {} (cache)".format(str(value), str(cache_entry)))
+                    "Elements doesn't match: (original) {} != {} (cache)".format(
+                        str(value), str(cache_entry)
+                    )
+                )
                 errors += 1
         if errors > 0:
             self.__log.error("Total mismatched elements: {}".format(errors))
@@ -199,7 +206,9 @@ class CacheDriver:
     def create(self, name: str, serializer: Serializer = JsonSerializer()) -> Cache:
         raise NotImplementedError
 
-    def get_or_create(self, name: str, serializer: Serializer = JsonSerializer()) -> Cache:
+    def get_or_create(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> Cache:
         raise NotImplementedError
 
 
@@ -224,18 +233,24 @@ class MemoryCacheDriver(CacheDriver):
     def __init__(self):
         self.caches = {}  # type: typing.Dict[str, MemoryCache]
 
-    def get_table(self, name: str, serializer: Serializer = JsonSerializer()) -> MemoryCache:
+    def get_table(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> MemoryCache:
         try:
             return self.caches[name]
         except KeyError:
             raise CacheNotInitialized(name)
 
-    def create(self, name: str, serializer: Serializer = JsonSerializer()) -> MemoryCache:
+    def create(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> MemoryCache:
         ret = MemoryCache()
         self.caches[name] = ret
         return ret
 
-    def get_or_create(self, name: str, serializer: Serializer = JsonSerializer()) -> MemoryCache:
+    def get_or_create(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> MemoryCache:
         if name not in self.caches:
             ret = MemoryCache()
             self.caches[name] = ret
@@ -272,19 +287,27 @@ class ShelveCacheDriver(CacheDriver):
         self.directory = os.path.join(tempfile.gettempdir(), "osm_cache")
         os.makedirs(self.directory, mode=0o755, exist_ok=True)
 
-    def get_table(self, name: str, serializer: Serializer = JsonSerializer()) -> ShelveCache:
+    def get_table(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> ShelveCache:
         try:
-            ret = shelve.open(os.path.join(self.directory, name), flag='r' if DISABLE_UPDATE else 'w')
+            ret = shelve.open(
+                os.path.join(self.directory, name), flag="r" if DISABLE_UPDATE else "w"
+            )
             return ShelveCache(ret, serializer)
         except dbm.error:
             raise CacheNotInitialized(name)
 
-    def create(self, name: str, serializer: Serializer = JsonSerializer()) -> ShelveCache:
-        ret = shelve.open(os.path.join(self.directory, name), flag='n')
+    def create(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> ShelveCache:
+        ret = shelve.open(os.path.join(self.directory, name), flag="n")
         return ShelveCache(ret, serializer)
 
-    def get_or_create(self, name: str, serializer: Serializer = JsonSerializer()) -> ShelveCache:
-        ret = shelve.open(os.path.join(self.directory, name), flag='c')
+    def get_or_create(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> ShelveCache:
+        ret = shelve.open(os.path.join(self.directory, name), flag="c")
         return ShelveCache(ret, serializer)
 
 
@@ -297,13 +320,9 @@ class DynamoCache(Cache):
 
     def get(self, name: str, default: dict = None) -> typing.Optional[dict]:
         self._logger.info("Accessing key: %s from table: %s", name, self._table)
-        ret = self._table.get_item(
-            Key={
-                'key': name
-            }
-        )
-        if 'Item' in ret:
-            ret = ret['Item']['value'].value
+        ret = self._table.get_item(Key={"key": name})
+        if "Item" in ret:
+            ret = ret["Item"]["value"].value
             if ret:
                 return self.serializer.deserialize(ret)
         if default:
@@ -312,23 +331,15 @@ class DynamoCache(Cache):
 
     def add(self, name: str, value: dict):
         self._table.put_item(
-            Item={
-                'key': name,
-                'value': self.serializer.serialize(value)
-            }
+            Item={"key": name, "value": self.serializer.serialize(value)}
         )
 
     def delete(self, name: str):
-        self._table.delete_item(
-            Key={
-                'key': name
-            }
-
-        )
+        self._table.delete_item(Key={"key": name})
 
     @synchronized
     def reload(self, contents: dict):
-        old_capacity = self._table.provisioned_throughput['WriteCapacityUnits']
+        old_capacity = self._table.provisioned_throughput["WriteCapacityUnits"]
         try:
             if old_capacity < 10:
                 try:
@@ -338,10 +349,7 @@ class DynamoCache(Cache):
             with self._table.batch_writer() as batch:
                 for k, v in tqdm.tqdm(contents.items(), desc="Reloading cache"):
                     batch.put_item(
-                        Item={
-                            'key': k,
-                            'value': self.serializer.serialize(v)
-                        }
+                        Item={"key": k, "value": self.serializer.serialize(v)}
                     )
         finally:
             try:
@@ -353,52 +361,67 @@ class DynamoCache(Cache):
         self._table.meta.client.update_table(
             TableName=self._table.name,
             ProvisionedThroughput={
-                'ReadCapacityUnits': self._table.provisioned_throughput['ReadCapacityUnits'],
-                'WriteCapacityUnits': capacity
-            })
+                "ReadCapacityUnits": self._table.provisioned_throughput[
+                    "ReadCapacityUnits"
+                ],
+                "WriteCapacityUnits": capacity,
+            },
+        )
 
     def keys(self) -> typing.Iterable:
         ret = self._table.scan(
-            ProjectionExpression='#k',
-            ExpressionAttributeNames={
-                '#k': 'key'
-            }
+            ProjectionExpression="#k", ExpressionAttributeNames={"#k": "key"}
         )
-        return (x['key'] for x in ret['Items'])
+        return (x["key"] for x in ret["Items"])
 
 
 class DynamoCacheDriver(CacheDriver):
     def __init__(self, dynamodb):
         self.dynamodb = dynamodb
 
-    def get_table(self, name: str, serializer: Serializer = JsonSerializer()) -> DynamoCache:
+    def get_table(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> DynamoCache:
         ret = self.dynamodb.Table(name)
         # self.dynamodb.meta.client.describe_table(TableName=name)['Table']
         return DynamoCache(ret, serializer)
 
-    def create(self, name: str, serializer: Serializer = JsonSerializer()) -> DynamoCache:
+    def create(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> DynamoCache:
         ret = self.dynamodb.Table(name)
         if ret.item_count > 0:
-            desc = self.dynamodb.meta.client.describe_table(TableName=name)['Table']
+            desc = self.dynamodb.meta.client.describe_table(TableName=name)["Table"]
             desc = dict(
-                (k, v) for (k, v) in desc.items() if k in
-                ('AttributeDefinitions', 'TableName', 'KeySchema',
-                 'LocalSecondaryIndexes', 'GlobalSecondaryIndexes',
-                 'ProvisionedThroughput', 'StreamSpecification')
+                (k, v)
+                for (k, v) in desc.items()
+                if k
+                in (
+                    "AttributeDefinitions",
+                    "TableName",
+                    "KeySchema",
+                    "LocalSecondaryIndexes",
+                    "GlobalSecondaryIndexes",
+                    "ProvisionedThroughput",
+                    "StreamSpecification",
+                )
             )
-            desc['ProvisionedThroughput'] = dict(
-                (k, v) for k, v in desc['ProvisionedThroughput'].items() if k in
-                ('ReadCapacityUnits', 'WriteCapacityUnits')
+            desc["ProvisionedThroughput"] = dict(
+                (k, v)
+                for k, v in desc["ProvisionedThroughput"].items()
+                if k in ("ReadCapacityUnits", "WriteCapacityUnits")
             )
             ret.meta.client.delete_table(TableName=name)
-            waiter = self.dynamodb.meta.client.get_waiter('table_not_exists')
+            waiter = self.dynamodb.meta.client.get_waiter("table_not_exists")
             waiter.wait(TableName=name)
             ret.meta.client.create_table(**desc)
-            waiter = self.dynamodb.meta.client.get_waiter('table_exists')
+            waiter = self.dynamodb.meta.client.get_waiter("table_exists")
             waiter.wait(TableName=name)
         return DynamoCache(ret, serializer)
 
-    def get_or_create(self, name: str, serializer: Serializer = JsonSerializer()) -> DynamoCache:
+    def get_or_create(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> DynamoCache:
         ret = self.dynamodb.Table(name)
         # self.dynamodb.meta.client.describe_table(TableName=name)['Table']
         return DynamoCache(ret, serializer)
@@ -407,7 +430,7 @@ class DynamoCacheDriver(CacheDriver):
 class CacheManager(object):
     def __init__(self, cache_driver: CacheDriver):
         self.cache_driver = cache_driver
-        meta = self.cache_driver.get_or_create('meta')
+        meta = self.cache_driver.get_or_create("meta")
         self.open_caches = {}  # type: typing.Dict[str, typing.Optional[Cache]]
 
         if not meta:
@@ -415,8 +438,9 @@ class CacheManager(object):
 
         self.meta = meta
 
-    def get_cache(self, name: str, version: int = None, serializer: Serializer = JsonSerializer()) \
-            -> typing.Optional[Cache]:
+    def get_cache(
+        self, name: str, version: int = None, serializer: Serializer = JsonSerializer()
+    ) -> typing.Optional[Cache]:
         if name == "meta":
             raise ValueError("Forbidden cache name: meta")
 
@@ -428,49 +452,49 @@ class CacheManager(object):
         if not cache:
             raise CacheNotInitialized(name)
 
-        if cache['status'] != 'ready':
+        if cache["status"] != "ready":
             raise CacheNotInitialized(name)
 
         ret = self.cache_driver.get_table(name, serializer)
-        if (version and cache['version'] >= version) or not version or version < 0:
+        if (version and cache["version"] >= version) or not version or version < 0:
             self.open_caches[name] = ret
             return ret
 
-        raise CacheExpired("Cache {0} not ready though metadata (status = {1}, version = {2} < requested {3} ".format(
-            name, cache.get('status'), cache.get('version'), version))
+        raise CacheExpired(
+            "Cache {0} not ready though metadata (status = {1}, version = {2} < requested {3} ".format(
+                name, cache.get("status"), cache.get("version"), version
+            )
+        )
 
-    def create_cache(self, name: str, serializer: Serializer = JsonSerializer()) -> Cache:
+    def create_cache(
+        self, name: str, serializer: Serializer = JsonSerializer()
+    ) -> Cache:
         if name == "meta":
             raise ValueError("Forbidden cache name: meta")
 
-        self.meta.add(name, {
-            'status': 'creating',
-            'updated': 0
-        })
+        self.meta.add(name, {"status": "creating", "updated": 0})
         return self.cache_driver.create(name, serializer)
 
     def mark_ready(self, name: str, version: int):
         desc = self.meta.get(name)
-        desc['status'] = 'ready'
-        desc['updated'] = time.time()
-        desc['version'] = version
+        desc["status"] = "ready"
+        desc["updated"] = time.time()
+        desc["version"] = version
         self.meta.add(name, desc)
 
     def version(self, name: str):
-        return self.meta.get(name, {}).get('version', -1)
+        return self.meta.get(name, {}).get("version", -1)
 
 
-if os.environ.get('USE_AWS'):
+if os.environ.get("USE_AWS"):
     import boto3
     from botocore.config import Config
 
-    config = Config(
-        retries=dict(
-            max_attempts=20
-        )
-    )
+    config = Config(retries=dict(max_attempts=20))
 
-    __cache_manager = CacheManager(DynamoCacheDriver(boto3.resource('dynamodb', config=config)))
+    __cache_manager = CacheManager(
+        DynamoCacheDriver(boto3.resource("dynamodb", config=config))
+    )
 else:
     __cache_manager = CacheManager(ShelveCacheDriver())
 
@@ -544,8 +568,10 @@ def protobuf_to_dict(pb, type_callable_map=TYPE_CALLABLE_MAP):
     result_dict = {}
     for field, value in pb.ListFields():
         if field.type not in type_callable_map:
-            raise TypeError("Field %s.%s has unrecognised type id %d" % (
-                pb.__class__.__name__, field.name, field.type))
+            raise TypeError(
+                "Field %s.%s has unrecognised type id %d"
+                % (pb.__class__.__name__, field.name, field.type)
+            )
         type_callable = type_callable_map[field.type]
         if field.label == FieldDescriptor.LABEL_REPEATED:
             type_callable = repeated(type_callable)
@@ -560,16 +586,16 @@ TYPE_CALLABLE_MAP[FieldDescriptor.TYPE_MESSAGE] = protobuf_to_dict
 # escaped split / join
 
 
-def split(s: str, delimeter: str = ',', escape_char: str = '\\') -> typing.List[str]:
+def split(s: str, delimeter: str = ",", escape_char: str = "\\") -> typing.List[str]:
     ret = []
     n = 0
     start = 0
 
     def add_segment(s: str):
         ret.append(
-            s.
-            replace(escape_char + delimeter, delimeter).
-            replace(escape_char + escape_char, escape_char)
+            s.replace(escape_char + delimeter, delimeter).replace(
+                escape_char + escape_char, escape_char
+            )
         )
 
     while n < len(s):
@@ -578,18 +604,18 @@ def split(s: str, delimeter: str = ',', escape_char: str = '\\') -> typing.List[
             read_escape_char = True
             n += 1
         if not read_escape_char and s[n] == delimeter:
-            add_segment(s[start:n - 1])
+            add_segment(s[start : n - 1])
             start = n + 1
     add_segment(s[start:])
     return ret
 
 
-def join(lst: typing.List[str], delimeter: str = ',', escape_char: str = '\\') -> str:
+def join(lst: typing.List[str], delimeter: str = ",", escape_char: str = "\\") -> str:
     return delimeter.join(
         map(
-            lambda x:
-                x.replace(escape_char, escape_char + escape_char).
-                replace(delimeter, escape_char + delimeter),
-            lst
+            lambda x: x.replace(escape_char, escape_char + escape_char).replace(
+                delimeter, escape_char + delimeter
+            ),
+            lst,
         )
     )

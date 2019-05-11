@@ -22,9 +22,9 @@ class Feature:
     @property
     def geojson(self):
         return {
-            'type': "Feature",
-            'geometry': shapely.geometry.mapping(self.geometry),
-            'properties': self._tags
+            "type": "Feature",
+            "geometry": shapely.geometry.mapping(self.geometry),
+            "properties": self._tags,
         }
 
     @property
@@ -36,8 +36,8 @@ class Feature:
 
     @staticmethod
     def from_geojson(dct: dict):
-        tags = dct['properties']
-        geometry = shapely.geometry.shape(dct['geometry'])
+        tags = dct["properties"]
+        geometry = shapely.geometry.shape(dct["geometry"])
         return Feature(geometry, tags)
 
 

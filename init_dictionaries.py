@@ -11,5 +11,5 @@ def main():
     converters.prg.init()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

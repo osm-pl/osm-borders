@@ -23,7 +23,9 @@ class OverpyShapely(unittest.TestCase):
         os = converters.overpyshapely.OverToShape(res)
         shape = os.get_relation_feature().geometry
         print(json.dumps(shapely.geometry.mapping(shape)))
-        borders = shapely.geometry.asShape(json.loads("""
+        borders = shapely.geometry.asShape(
+            json.loads(
+                """
 {
         "type": "Polygon",
         "coordinates": [
@@ -51,10 +53,14 @@ class OverpyShapely(unittest.TestCase):
           ]
         ]
 }
-"""))
+"""
+            )
+        )
         self.assertTrue(shape.within(borders))
 
-        inner = shapely.geometry.asShape(json.loads("""
+        inner = shapely.geometry.asShape(
+            json.loads(
+                """
         {
         "type": "Polygon",
         "coordinates": [
@@ -81,5 +87,7 @@ class OverpyShapely(unittest.TestCase):
             ]
           ]
         ]
-      }"""))
+      }"""
+            )
+        )
         self.assertFalse(shape.contains(inner))

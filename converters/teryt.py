@@ -21,24 +21,25 @@ import tqdm
 import zeep
 from zeep.wsse.username import UsernameToken
 
-from .teryt_pb2 import \
-    TercEntry as TercEntry_pb, \
-    SimcEntry as SimcEntry_pb, \
-    UlicMultiEntry as UlicMultiEntry_pb
+from .teryt_pb2 import (
+    TercEntry as TercEntry_pb,
+    SimcEntry as SimcEntry_pb,
+    UlicMultiEntry as UlicMultiEntry_pb,
+)
 from .tools import VersionedCache, CacheNotInitialized
 from .tools import groupby, get_cache_manager, ProtoSerializer, Cache, synchronized
 
-TERYT_SIMC_DB = 'osm_teryt_simc_v1'
+TERYT_SIMC_DB = "osm_teryt_simc_v1"
 
-TERYT_WMRODZ_DB = 'osm_teryt_wmrodz_v1'
+TERYT_WMRODZ_DB = "osm_teryt_wmrodz_v1"
 
-TERYT_TERYT_DB = 'osm_teryt_teryt_v1'
+TERYT_TERYT_DB = "osm_teryt_teryt_v1"
 
-TERYT_ULIC_DB = 'osm_teryt_ulic_v1'
+TERYT_ULIC_DB = "osm_teryt_ulic_v1"
 
-Version = typing.NewType('Version', int)
+Version = typing.NewType("Version", int)
 
-T = typing.TypeVar('T')
+T = typing.TypeVar("T")
 
 
 def ensure_2_digits(o) -> str:
@@ -52,30 +53,32 @@ def _zip_read(binary: bytes) -> bytes:
 
 
 def _row_as_dict(elem: ET.Element) -> typing.Dict[str, str]:
-    return dict(
-        (x.tag.lower(), x.text.strip()) for x in elem.iter() if x.text
-    )
+    return dict((x.tag.lower(), x.text.strip()) for x in elem.iter() if x.text)
 
 
 def _get_teryt_client(session: requests.Session = requests.Session()) -> zeep.Client:
-    __log = logging.getLogger(__name__ + '.get_teryt_client')
+    __log = logging.getLogger(__name__ + ".get_teryt_client")
     __log.info("Connecting to TERYT web service")
-    wsdl = 'https://uslugaterytws1.stat.gov.pl/wsdl/terytws1.wsdl'
-    wsse = UsernameToken('osmaddrtools', '#06JWOWutt4')
+    wsdl = "https://uslugaterytws1.stat.gov.pl/wsdl/terytws1.wsdl"
+    wsse = UsernameToken("osmaddrtools", "#06JWOWutt4")
     return zeep.Client(wsdl=wsdl, wsse=wsse, transport=zeep.Transport(session=session))
 
 
 def _get_dict(data: bytes, cls: typing.Type[T]) -> typing.Iterable[T]:
     tree = ET.fromstring(data)
     # noinspection PyCallingNonCallable
-    return (cls(_row_as_dict(x)) for x in tree.find('catalog').iter('row'))
+    return (cls(_row_as_dict(x)) for x in tree.find("catalog").iter("row"))
 
 
-def update_record_to_dict(obj: Element, suffix: str, exceptions: typing.Iterable[str] = ()) -> typing.Dict[str, str]:
+def update_record_to_dict(
+    obj: Element, suffix: str, exceptions: typing.Iterable[str] = ()
+) -> typing.Dict[str, str]:
     all_tags = dict((x.tag, x.text.strip() if x.text else x.text) for x in obj.iter())
 
     ret = dict(
-        (key.lower()[:-len(suffix)], value) for key, value in all_tags.items() if key.endswith(suffix)
+        (key.lower()[: -len(suffix)], value)
+        for key, value in all_tags.items()
+        if key.endswith(suffix)
     )
 
     for key in exceptions:
@@ -126,36 +129,36 @@ def _date_to_int(version: datetime.date) -> Version:
 
 
 _TERC_RODZAJ_MAPPING = {
-    '1': 'gmina miejska',
-    '2': 'gmina wiejska',
-    '3': 'gmina miejsko-wiejska',
-    '4': 'miasto w gminie miejsko-wiejskiej',
-    '5': 'obszar wiejski w gminie miejsko-wiejskiej',
-    '8': 'dzielnica m.st. Warszawa',
-    '9': 'delegatury w gminach miejskich',
+    "1": "gmina miejska",
+    "2": "gmina wiejska",
+    "3": "gmina miejsko-wiejska",
+    "4": "miasto w gminie miejsko-wiejskiej",
+    "5": "obszar wiejski w gminie miejsko-wiejskiej",
+    "8": "dzielnica m.st. Warszawa",
+    "9": "delegatury w gminach miejskich",
 }
 
 _ULIC_CECHA_MAPPING = {
-    'UL.': 'Ulica',
-    'AL.': 'Aleja',
-    'PL.': 'Plac',
-    'SKWER': 'Skwer',
-    'BULW.': 'Bulwar',
-    'RONDO': 'Rondo',
-    'PARK': 'Park',
-    'RYNEK': 'Rynek',
-    'SZOSA': 'Szosa',
-    'DROGA': 'Droga',
-    'OS.': 'Osiedle',
-    'OGRÓD': 'Ogród',
-    'WYSPA': 'Wyspa',
-    'WYB.': 'Wybrzeże',
-    'INNE': ''
+    "UL.": "Ulica",
+    "AL.": "Aleja",
+    "PL.": "Plac",
+    "SKWER": "Skwer",
+    "BULW.": "Bulwar",
+    "RONDO": "Rondo",
+    "PARK": "Park",
+    "RYNEK": "Rynek",
+    "SZOSA": "Szosa",
+    "DROGA": "Droga",
+    "OS.": "Osiedle",
+    "OGRÓD": "Ogród",
+    "WYSPA": "Wyspa",
+    "WYB.": "Wybrzeże",
+    "INNE": "",
 }
 
 
 class ToFromJsonSerializer(ProtoSerializer, typing.Generic[T]):
-    __log = logging.getLogger(__name__ + '.ToFromJsonSerializer')
+    __log = logging.getLogger(__name__ + ".ToFromJsonSerializer")
 
     def __init__(self, cls: typing.Type[T], pb_cls):
         super(ToFromJsonSerializer, self).__init__(pb_cls)
@@ -183,15 +186,15 @@ class ToFromJsonSerializer(ProtoSerializer, typing.Generic[T]):
 
 
 class TercEntry(object):
-    __log = logging.getLogger(__name__ + '.TercEntry')
+    __log = logging.getLogger(__name__ + ".TercEntry")
 
     def __init__(self, dct: typing.Dict[str, str]):
-        self.woj = dct.get('woj')
-        self.powiat = dct.get('pow')
-        self.gmi = dct.get('gmi')
-        self.rodz = dct.get('rodz')
-        self.nazwadod = nvl(dct.get('nazwadod'), '')
-        self.nazwa = dct.get('nazwa')
+        self.woj = dct.get("woj")
+        self.powiat = dct.get("pow")
+        self.gmi = dct.get("gmi")
+        self.rodz = dct.get("rodz")
+        self.nazwadod = nvl(dct.get("nazwadod"), "")
+        self.nazwa = dct.get("nazwa")
 
     def __str__(self):
         return "TercEntry({{woj: {}, pow: {}, gmi: {}, rodz: {}, nazwadod: {}, nazwa: {}}})".format(
@@ -199,7 +202,7 @@ class TercEntry(object):
         )
 
     def update_from(self, other: typing.Dict[str, str]):
-        for attr in ('woj', 'pow', 'rodz', 'nazwadod', 'nazwa'):
+        for attr in ("woj", "pow", "rodz", "nazwadod", "nazwa"):
             new_val = other.get(attr)
             if new_val:
                 setattr(self, attr, new_val)
@@ -210,21 +213,29 @@ class TercEntry(object):
 
     @property
     def rodz_nazwa(self):
-        return _TERC_RODZAJ_MAPPING.get(self.rodz) if self.rodz else {2: 'województwo', 4: 'powiat'}[len(self.terc)]
+        return (
+            _TERC_RODZAJ_MAPPING.get(self.rodz)
+            if self.rodz
+            else {2: "województwo", 4: "powiat"}[len(self.terc)]
+        )
 
     @property
     def terc_base(self) -> typing.Iterable[str]:
-        return (y for y in
-                (self.woj, self.powiat) + ((self.gmi, self.rodz) if self.gmi else ())
-                if y
-                )
+        return (
+            y
+            for y in (self.woj, self.powiat)
+            + ((self.gmi, self.rodz) if self.gmi else ())
+            if y
+        )
 
     @property
     def terc(self) -> str:
-        return "".join(y for y in
-                       (self.woj, self.powiat) + ((self.gmi, self.rodz) if self.gmi else ())
-                       if y
-                       )
+        return "".join(
+            y
+            for y in (self.woj, self.powiat)
+            + ((self.gmi, self.rodz) if self.gmi else ())
+            if y
+        )
 
     @property
     def parent_terc(self) -> str:
@@ -235,57 +246,62 @@ class TercEntry(object):
         return ""
 
     @property
-    def solr_json(self) -> typing.Tuple[str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]]:
+    def solr_json(
+        self
+    ) -> typing.Tuple[
+        str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]
+    ]:
         return (
-            "add", {
+            "add",
+            {
                 "doc": {
-                    'id': "terc_" + self.terc,
-                    'parent': ("terc_" + self.parent_terc) if self.parent_terc else '',
-                    'terc': self.terc,
-                    'rodzaj': self.rodz_nazwa,
-                    'value': (self.nazwadod + ' ' + self.nazwa).strip(),
-                    'typ': 'terc',
+                    "id": "terc_" + self.terc,
+                    "parent": ("terc_" + self.parent_terc) if self.parent_terc else "",
+                    "terc": self.terc,
+                    "rodzaj": self.rodz_nazwa,
+                    "value": (self.nazwadod + " " + self.nazwa).strip(),
+                    "typ": "terc",
                 },
-                'boost': 7 - len(self.parent_terc)
-            }
+                "boost": 7 - len(self.parent_terc),
+            },
         )
 
     def to_dict(self) -> typing.Dict[str, str]:
-        ret = {
-            'woj': int(self.woj),
-            'nazwadod': self.nazwadod,
-            'nazwa': self.nazwa
-        }
+        ret = {"woj": int(self.woj), "nazwadod": self.nazwadod, "nazwa": self.nazwa}
         if self.powiat:
-            ret['powiat'] = int(self.powiat)
+            ret["powiat"] = int(self.powiat)
         if self.gmi:
-            ret['gmi'] = int(self.gmi)
-            ret['rodz'] = int(self.rodz)
+            ret["gmi"] = int(self.gmi)
+            ret["rodz"] = int(self.rodz)
         return ret
 
     @staticmethod
-    def from_dict(dct: dict) -> 'TercEntry':
-        ret = TercEntry({
-            'woj': ensure_2_digits(dct['woj']),
-            'pow': ensure_2_digits(dct['powiat']) if dct.get('powiat') else '',
-            'gmi': ensure_2_digits(dct['gmi']) if dct.get('gmi') else '',
-            'rodz': "{0:1}".format(int(dct['rodz'])) if dct.get('rodz') else '',
-            'nazwadod': dct.get('nazwadod'),
-            'nazwa': dct['nazwa']
-        })
+    def from_dict(dct: dict) -> "TercEntry":
+        ret = TercEntry(
+            {
+                "woj": ensure_2_digits(dct["woj"]),
+                "pow": ensure_2_digits(dct["powiat"]) if dct.get("powiat") else "",
+                "gmi": ensure_2_digits(dct["gmi"]) if dct.get("gmi") else "",
+                "rodz": "{0:1}".format(int(dct["rodz"])) if dct.get("rodz") else "",
+                "nazwadod": dct.get("nazwadod"),
+                "nazwa": dct["nazwa"],
+            }
+        )
         TercEntry.__log.debug("From dictionary: {} created {}".format(dct, str(ret)))
         return ret
 
     @staticmethod
-    def from_update_dict(dct: dict) -> 'TercEntry':
-        ret = TercEntry({
-            'woj': ensure_2_digits(dct['woj']),
-            'pow': ensure_2_digits(dct['pow']) if dct.get('pow') else '',
-            'gmi': ensure_2_digits(dct['gmi']) if dct.get('gmi') else '',
-            'rodz': "{0:1}".format(int(dct['rodz'])) if dct.get('rodz') else '',
-            'nazwadod': dct.get('nazwadod'),
-            'nazwa': dct['nazwa']
-        })
+    def from_update_dict(dct: dict) -> "TercEntry":
+        ret = TercEntry(
+            {
+                "woj": ensure_2_digits(dct["woj"]),
+                "pow": ensure_2_digits(dct["pow"]) if dct.get("pow") else "",
+                "gmi": ensure_2_digits(dct["gmi"]) if dct.get("gmi") else "",
+                "rodz": "{0:1}".format(int(dct["rodz"])) if dct.get("rodz") else "",
+                "nazwadod": dct.get("nazwadod"),
+                "nazwa": dct["nazwa"],
+            }
+        )
         TercEntry.__log.debug("From dictionary: {} created {}".format(dct, str(ret)))
         return ret
 
@@ -360,20 +376,23 @@ class SimcEntry(object):
   </zmiana>
 
     """
-    __log = logging.getLogger(__name__ + '.SimcEntry')
+
+    __log = logging.getLogger(__name__ + ".SimcEntry")
 
     def __init__(self, dct: dict = None):
         self.terc = None
         self.nazwa = None
 
         if dct:
-            self.terc = dct.get('woj') + dct.get('pow') + dct.get('gmi') + dct.get('rodz_gmi')
-            self.rm_id = dct.get('rm')
-            self.nazwa = dct.get('nazwa')
-            self.sym = dct.get('sym')
+            self.terc = (
+                dct.get("woj") + dct.get("pow") + dct.get("gmi") + dct.get("rodz_gmi")
+            )
+            self.rm_id = dct.get("rm")
+            self.nazwa = dct.get("nazwa")
+            self.sym = dct.get("sym")
             self.parent = None
-            if dct.get('sym') != dct.get('sympod'):
-                self.parent = dct.get('sympod')
+            if dct.get("sym") != dct.get("sympod"):
+                self.parent = dct.get("sympod")
         else:
             self.terc = None
             self.rm_id = None
@@ -392,39 +411,50 @@ class SimcEntry(object):
 
     def to_dict(self) -> typing.Dict[str, str]:
         ret = {
-            'terc': int(self.terc),
-            'rm': int(self.rm_id),
-            'nazwa': self.nazwa,
-            'sym': int(self.sym),
+            "terc": int(self.terc),
+            "rm": int(self.rm_id),
+            "nazwa": self.nazwa,
+            "sym": int(self.sym),
         }
         if self.parent:
-            ret['parent'] = int(self.parent)
+            ret["parent"] = int(self.parent)
         return ret
 
     @staticmethod
-    def from_dict(dct: dict) -> 'SimcEntry':
+    def from_dict(dct: dict) -> "SimcEntry":
         ret = SimcEntry()
-        ret.terc = "{0:07}".format(dct['terc'])
-        ret.rm_id = ensure_2_digits(dct.get('rm', 0))
-        ret.nazwa = dct['nazwa']
-        ret.sym = "{0:07}".format(dct['sym'])
-        ret.parent = "{0:07}".format(dct['parent']) if 'parent' in dct else None
-        SimcEntry.__log.debug("[from_dict]: From dictionary: {} created {}".format(dct, str(ret)))
+        ret.terc = "{0:07}".format(dct["terc"])
+        ret.rm_id = ensure_2_digits(dct.get("rm", 0))
+        ret.nazwa = dct["nazwa"]
+        ret.sym = "{0:07}".format(dct["sym"])
+        ret.parent = "{0:07}".format(dct["parent"]) if "parent" in dct else None
+        SimcEntry.__log.debug(
+            "[from_dict]: From dictionary: {} created {}".format(dct, str(ret))
+        )
         return ret
 
     @staticmethod
-    def from_update_dict(dct: dict) -> 'SimcEntry':
+    def from_update_dict(dct: dict) -> "SimcEntry":
         ret = SimcEntry()
-        ret.terc = ensure_2_digits(dct['woj']) + ensure_2_digits(dct['pow']) + ensure_2_digits(dct['gmi']) + \
-            "{0:1}".format(dct['rodz'])
-        ret.rm_id = ensure_2_digits(dct.get('rodzajmiejscowosci', 0))
-        ret.nazwa = dct.get('nazwa')
-        ret.sym = "{0:07}".format(int(dct['identyfikator']))
-        ret.parent = "{0:07}".format(int(dct['identyfikatormiejscowoscipodstawowej'])) if \
-            'identyfikatormiejscowoscipodstawowej' in dct else None
+        ret.terc = (
+            ensure_2_digits(dct["woj"])
+            + ensure_2_digits(dct["pow"])
+            + ensure_2_digits(dct["gmi"])
+            + "{0:1}".format(dct["rodz"])
+        )
+        ret.rm_id = ensure_2_digits(dct.get("rodzajmiejscowosci", 0))
+        ret.nazwa = dct.get("nazwa")
+        ret.sym = "{0:07}".format(int(dct["identyfikator"]))
+        ret.parent = (
+            "{0:07}".format(int(dct["identyfikatormiejscowoscipodstawowej"]))
+            if "identyfikatormiejscowoscipodstawowej" in dct
+            else None
+        )
         if ret.sym == ret.parent:
             ret.parent = None
-        SimcEntry.__log.debug("[from_update_dict] From dictionary: {} created {}".format(dct, str(ret)))
+        SimcEntry.__log.debug(
+            "[from_update_dict] From dictionary: {} created {}".format(dct, str(ret))
+        )
         return ret
 
     def __eq__(self, other):
@@ -433,22 +463,29 @@ class SimcEntry(object):
         return False
 
     @property
-    def solr_json(self) -> typing.Tuple[str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]]:
+    def solr_json(
+        self
+    ) -> typing.Tuple[
+        str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]
+    ]:
         return (
-            "add", {
+            "add",
+            {
                 "doc": {
-                    'id': 'simc_' + self.sym,
-                    'parent': ('simc_' + self.parent) if self.parent else ('terc_' + self.terc),
+                    "id": "simc_" + self.sym,
+                    "parent": ("simc_" + self.parent)
+                    if self.parent
+                    else ("terc_" + self.terc),
                     # 'terc': self.terc,
-                    'rodzaj': self.rm,
-                    'value': self.nazwa,
-                    'simc': self.sym,
-                    'wojewodztwo': self.woj,
-                    'powiat': self.powiat,
-                    'gmina': self.gmi,
-                    'typ': 'simc',
+                    "rodzaj": self.rm,
+                    "value": self.nazwa,
+                    "simc": self.sym,
+                    "wojewodztwo": self.woj,
+                    "powiat": self.powiat,
+                    "gmina": self.gmi,
+                    "typ": "simc",
                 }
-            }
+            },
         )
 
     @property
@@ -468,17 +505,21 @@ class SimcEntry(object):
         return wmrodz()[self.rm_id]
 
     def update_from(self, new: typing.Dict[str, str]):
-        if new.get('woj'):
-            self.terc = ensure_2_digits(new['woj']) + ensure_2_digits(new['pow']) + ensure_2_digits(new['gmi']) + \
-                        "{0:1}".format(new['rodz'])
+        if new.get("woj"):
+            self.terc = (
+                ensure_2_digits(new["woj"])
+                + ensure_2_digits(new["pow"])
+                + ensure_2_digits(new["gmi"])
+                + "{0:1}".format(new["rodz"])
+            )
 
-        if new.get('rodzajmiejscowosci'):
-            self.rm_id = ensure_2_digits(new.get('rodzajmiejscowosci') or 0)
-        if new.get('nazwa'):
-            self.nazwa = new['nazwa']
+        if new.get("rodzajmiejscowosci"):
+            self.rm_id = ensure_2_digits(new.get("rodzajmiejscowosci") or 0)
+        if new.get("nazwa"):
+            self.nazwa = new["nazwa"]
 
-        if new.get('identyfikatormiejscowoscipodstawowej'):
-            self.parent = str(new['identyfikatormiejscowoscipodstawowej'])
+        if new.get("identyfikatormiejscowoscipodstawowej"):
+            self.parent = str(new["identyfikatormiejscowoscipodstawowej"])
             if self.parent == self.sym:
                 self.parent = None
 
@@ -492,43 +533,49 @@ class BasicEntry(object):
 def _clean_street_name(cecha: str, nazwa1: str, nazwa2: str) -> str:
     def mapper(name: str):
         if name and name.casefold().startswith(cecha.casefold()):
-            return name[len(cecha):].strip()
-        elif name and name.casefold().startswith(_ULIC_CECHA_MAPPING[cecha.upper()].casefold()):
-            return name[len(_ULIC_CECHA_MAPPING.get(cecha.upper())):].strip()
+            return name[len(cecha) :].strip()
+        elif name and name.casefold().startswith(
+            _ULIC_CECHA_MAPPING[cecha.upper()].casefold()
+        ):
+            return name[len(_ULIC_CECHA_MAPPING.get(cecha.upper())) :].strip()
         return name.strip() if isinstance(name, str) else name
 
     nazwa1 = mapper(nazwa1)
     nazwa2 = mapper(nazwa2)
     if not nazwa1 and not nazwa2:
         return ""
-    return " ".join((x for x in (_ULIC_CECHA_MAPPING.get(cecha.upper()), nazwa1, nazwa2) if x))
+    return " ".join(
+        (x for x in (_ULIC_CECHA_MAPPING.get(cecha.upper()), nazwa1, nazwa2) if x)
+    )
 
 
 class UlicEntry(object):
-    __log = logging.getLogger(__name__ + '.UlicEntry')
+    __log = logging.getLogger(__name__ + ".UlicEntry")
     _init_to_update_map = {
-        'woj': 'woj',
-        'pow': 'pow',
-        'gmi': 'gmi',
-        'rodz_gmi': 'rodz',
-        'sym': 'identyfikatormiejscowosci',
-        'sym_ul': 'identyfikatornazwyulicy',
-        'cecha': 'cecha',
-        'nazwa_1': 'nazwa1',
-        'nazwa_2': 'nazwa2',
-        'stan_na': 'stan',
+        "woj": "woj",
+        "pow": "pow",
+        "gmi": "gmi",
+        "rodz_gmi": "rodz",
+        "sym": "identyfikatormiejscowosci",
+        "sym_ul": "identyfikatornazwyulicy",
+        "cecha": "cecha",
+        "nazwa_1": "nazwa1",
+        "nazwa_2": "nazwa2",
+        "stan_na": "stan",
     }
     _update_to_init_map = dict((v, k) for (k, v) in _init_to_update_map.items())
 
     def __init__(self, dct: typing.Dict[str, str]):
-        self.sym = dct.get('sym')
-        self.sym_ul = dct.get('sym_ul')
-        self.cecha_orig = dct.get('cecha')
+        self.sym = dct.get("sym")
+        self.sym_ul = dct.get("sym_ul")
+        self.cecha_orig = dct.get("cecha")
         self._nazwa_1 = ""
         self._nazwa_2 = ""
-        self.nazwa_1 = nvl(dct.get('nazwa_1'), '')
-        self.nazwa_2 = nvl(dct.get('nazwa_2'), '')
-        self.terc = dct.get('woj') + dct.get('pow') + dct.get('gmi') + dct.get('rodz_gmi')
+        self.nazwa_1 = nvl(dct.get("nazwa_1"), "")
+        self.nazwa_2 = nvl(dct.get("nazwa_2"), "")
+        self.terc = (
+            dct.get("woj") + dct.get("pow") + dct.get("gmi") + dct.get("rodz_gmi")
+        )
 
     @property
     def nazwa_1(self):
@@ -536,7 +583,7 @@ class UlicEntry(object):
 
     @nazwa_1.setter
     def nazwa_1(self, value):
-        if value is None or value.endswith(' '):
+        if value is None or value.endswith(" "):
             raise ValueError("Invalid value: {}".format(value))
         self._nazwa_1 = value
 
@@ -546,13 +593,18 @@ class UlicEntry(object):
 
     @nazwa_2.setter
     def nazwa_2(self, value):
-        if value is None or value.endswith(' '):
+        if value is None or value.endswith(" "):
             raise ValueError("Invalid value: {}".format(value))
         self._nazwa_2 = value
 
     def __str__(self):
         return "UlicEntry({{sym: {}, symul: {}, cecha_orig: {}, nazwa_1: {}, nazwa_2: {}, terc: {}}})".format(
-            self.sym, self.sym_ul, self.cecha_orig, self.nazwa_1, self.nazwa_2, self.terc
+            self.sym,
+            self.sym_ul,
+            self.cecha_orig,
+            self.nazwa_1,
+            self.nazwa_2,
+            self.terc,
         )
 
     @property
@@ -563,69 +615,78 @@ class UlicEntry(object):
         dct = dict(
             (UlicEntry._update_to_init_map.get(k, k), v) for (k, v) in obj.items()
         )
-        for attr in ('sym', 'sym_ul'):
+        for attr in ("sym", "sym_ul"):
             new_value = dct.get(attr)
             if new_value:
                 setattr(self, attr, new_value)
-        if dct.get('cecha'):
-            self.cecha_orig = dct.get('cecha')
+        if dct.get("cecha"):
+            self.cecha_orig = dct.get("cecha")
         # undocumented but looks like needs to get all nazwa elements on name change
-        if any(dct.get(x) for x in ('nazwa_1', 'nazwa_2')):
-            for attr in ('nazwa_1', 'nazwa_2'):
-                setattr(self, attr, nvl(dct.get(attr, ''), ''))
-        if any(dct.get(x) for x in ('woj', 'pow', 'gmi', 'rodz_gmi')):
-            self.terc = dct.get('woj') + dct.get('pow') + dct.get('gmi') + dct.get('rodz_gmi')
+        if any(dct.get(x) for x in ("nazwa_1", "nazwa_2")):
+            for attr in ("nazwa_1", "nazwa_2"):
+                setattr(self, attr, nvl(dct.get(attr, ""), ""))
+        if any(dct.get(x) for x in ("woj", "pow", "gmi", "rodz_gmi")):
+            self.terc = (
+                dct.get("woj") + dct.get("pow") + dct.get("gmi") + dct.get("rodz_gmi")
+            )
 
     def to_dict(self) -> typing.Dict[str, str]:
         return {
-            'sym': int(self.sym),
-            'symul': int(self.sym_ul),
-            'cecha': self.cecha_orig,
-            'nazwa_1': self.nazwa_1,
-            'nazwa_2': self.nazwa_2,
-            'terc': int(self.terc)
+            "sym": int(self.sym),
+            "symul": int(self.sym_ul),
+            "cecha": self.cecha_orig,
+            "nazwa_1": self.nazwa_1,
+            "nazwa_2": self.nazwa_2,
+            "terc": int(self.terc),
         }
 
     @staticmethod
-    def from_dict(dct: dict) -> 'UlicEntry':
-        terc = "{0:07}".format(dct['terc'])
-        return UlicEntry({
-            'sym': "{0:07}".format(int(dct['sym'])),
-            'sym_ul': "{0:05}".format(int(dct['symul'])),
-            'cecha': dct['cecha'],
-            'nazwa_1': dct['nazwa_1'],
-            'nazwa_2': nvl(dct.get('nazwa_2'), ''),
-            'woj': terc[:2],
-            'pow': terc[2:4],
-            'gmi': terc[4:6],
-            'rodz_gmi': terc[6]
-        })
+    def from_dict(dct: dict) -> "UlicEntry":
+        terc = "{0:07}".format(dct["terc"])
+        return UlicEntry(
+            {
+                "sym": "{0:07}".format(int(dct["sym"])),
+                "sym_ul": "{0:05}".format(int(dct["symul"])),
+                "cecha": dct["cecha"],
+                "nazwa_1": dct["nazwa_1"],
+                "nazwa_2": nvl(dct.get("nazwa_2"), ""),
+                "woj": terc[:2],
+                "pow": terc[2:4],
+                "gmi": terc[4:6],
+                "rodz_gmi": terc[6],
+            }
+        )
 
     @staticmethod
-    def from_update(dct: dict) -> 'UlicEntry':
-        ret = UlicEntry(dict(
-            (UlicEntry._update_to_init_map.get(k, k), v) for (k, v) in dct.items()
-        ))
+    def from_update(dct: dict) -> "UlicEntry":
+        ret = UlicEntry(
+            dict((UlicEntry._update_to_init_map.get(k, k), v) for (k, v) in dct.items())
+        )
         UlicEntry.__log.debug("From dictionary: {} created {}".format(dct, str(ret)))
         return ret
 
     @property
-    def solr_json(self) -> typing.Tuple[str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]]:
+    def solr_json(
+        self
+    ) -> typing.Tuple[
+        str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]
+    ]:
         return (
-            "add", {
+            "add",
+            {
                 "doc": {
-                    'id': 'ulic:' + self.sym + self.sym_ul,
-                    'parent': 'simc_' + self.sym,
-                    'terc': self.terc,
-                    'value': self.nazwa,
-                    'cecha': self.cecha,
-                    'symul': self.sym_ul,
-                    'wojewodztwo': self.woj,
-                    'powiat': self.powiat,
-                    'gmina': self.gmi,
-                    'miejscowosc': self.miejscowosc
+                    "id": "ulic:" + self.sym + self.sym_ul,
+                    "parent": "simc_" + self.sym,
+                    "terc": self.terc,
+                    "value": self.nazwa,
+                    "cecha": self.cecha,
+                    "symul": self.sym_ul,
+                    "wojewodztwo": self.woj,
+                    "powiat": self.powiat,
+                    "gmina": self.gmi,
+                    "miejscowosc": self.miejscowosc,
                 }
-            }
+            },
         )
 
     def __eq__(self, other):
@@ -659,7 +720,7 @@ class UlicEntry(object):
 
 
 class UlicMultiEntry(object):
-    __log = logging.getLogger(__name__ + '.UlicMultiEntry')
+    __log = logging.getLogger(__name__ + ".UlicMultiEntry")
 
     def __init__(self, entry: UlicEntry):
         self.sym_ul = entry.sym_ul
@@ -673,7 +734,10 @@ class UlicMultiEntry(object):
             self.sym_ul,
             self.cecha,
             self.nazwa,
-            "{" + ", ".join((str(k) + ": " + str(v)) for (k, v) in self.entries.items()) + "}")
+            "{"
+            + ", ".join((str(k) + ": " + str(v)) for (k, v) in self.entries.items())
+            + "}",
+        )
 
     def __getitem__(self, item: str):
         return self.entries[item]
@@ -684,16 +748,25 @@ class UlicMultiEntry(object):
 
     def add_entry(self, value: UlicEntry):
         if self.sym_ul != value.sym_ul:
-            raise ValueError("Symul {0} different than expected {1}".format(value.sym_ul, self.sym_ul))
+            raise ValueError(
+                "Symul {0} different than expected {1}".format(
+                    value.sym_ul, self.sym_ul
+                )
+            )
 
         if self.cecha != value.cecha:
-            self.__log.info("Different CECHA {0} for street {1} in {2} [TERYT: {3}] than expected {4}".format(
-                value.cecha, self.nazwa, value.miejscowosc, value.terc, self.cecha))
+            self.__log.info(
+                "Different CECHA {0} for street {1} in {2} [TERYT: {3}] than expected {4}".format(
+                    value.cecha, self.nazwa, value.miejscowosc, value.terc, self.cecha
+                )
+            )
 
         if self.nazwa != value.nazwa:
-            self.__log.info("Different NAZWA {0} for street {1} in {2} [TERYT: {3}] than expected {4}".format(
-                value.nazwa, self.sym_ul, value.miejscowosc, value.terc, self.nazwa
-            ))
+            self.__log.info(
+                "Different NAZWA {0} for street {1} in {2} [TERYT: {3}] than expected {4}".format(
+                    value.nazwa, self.sym_ul, value.miejscowosc, value.terc, self.nazwa
+                )
+            )
 
         self.entries[value.sym] = value
 
@@ -713,10 +786,12 @@ class UlicMultiEntry(object):
         if not all(x.sym_ul == self.sym_ul for x in self.entries.values()):
             raise ValueError("Inconsistent object")
         return {
-            'symul': int(self.sym_ul),
-            'cecha': self.cecha,
-            'nazwa': self.nazwa,
-            'entries': [self.entries[key].to_dict() for key in sorted(self.entries.keys())]
+            "symul": int(self.sym_ul),
+            "cecha": self.cecha,
+            "nazwa": self.nazwa,
+            "entries": [
+                self.entries[key].to_dict() for key in sorted(self.entries.keys())
+            ],
         }
 
     def __eq__(self, other):
@@ -725,16 +800,24 @@ class UlicMultiEntry(object):
         return False
 
     @staticmethod
-    def from_dict(dct: dict) -> 'UlicMultiEntry':
-        ret = UlicMultiEntry.from_list([UlicEntry.from_dict(x) for x in dct['entries']])
+    def from_dict(dct: dict) -> "UlicMultiEntry":
+        ret = UlicMultiEntry.from_list([UlicEntry.from_dict(x) for x in dct["entries"]])
 
-        assert int(ret.sym_ul) == dct['symul']
-        assert ret.cecha == dct.get('cecha') or (not ret.cecha and not dct.get('cecha')) or ret.cecha is None
-        assert ret.nazwa == dct.get('nazwa') or (not ret.nazwa and not dct.get('nazwa')) or ret.nazwa is None
+        assert int(ret.sym_ul) == dct["symul"]
+        assert (
+            ret.cecha == dct.get("cecha")
+            or (not ret.cecha and not dct.get("cecha"))
+            or ret.cecha is None
+        )
+        assert (
+            ret.nazwa == dct.get("nazwa")
+            or (not ret.nazwa and not dct.get("nazwa"))
+            or ret.nazwa is None
+        )
         return ret
 
     @staticmethod
-    def from_list(lst: typing.List[UlicEntry]) -> 'UlicMultiEntry':
+    def from_list(lst: typing.List[UlicEntry]) -> "UlicMultiEntry":
         if len(lst) < 1:
             raise ValueError("At least one entry is needed")
         rv = UlicMultiEntry(lst[0])
@@ -755,33 +838,40 @@ class UlicMultiEntry(object):
         self.nazwa = new_nazwa
 
     @property
-    def solr_json(self) -> typing.Tuple[str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]]:
-        sorted_entries = list(sorted(self.entries.values(), key=lambda x: x.miejscowosc))
+    def solr_json(
+        self
+    ) -> typing.Tuple[
+        str, typing.Dict[str, typing.Dict[str, typing.Union[str, typing.List[str]]]]
+    ]:
+        sorted_entries = list(
+            sorted(self.entries.values(), key=lambda x: x.miejscowosc)
+        )
         return (
-            "add", {
+            "add",
+            {
                 "doc": {
-                    'id': 'ulic:' + self.sym_ul,
-                    'parent': [('simc_' + entry.sym) for entry in sorted_entries],
-                    'miejscowosc': [entry.miejscowosc for entry in sorted_entries],
-                    'value': self.nazwa,
-                    'symul': self.sym_ul,
-                    'typ': 'ulic',
+                    "id": "ulic:" + self.sym_ul,
+                    "parent": [("simc_" + entry.sym) for entry in sorted_entries],
+                    "miejscowosc": [entry.miejscowosc for entry in sorted_entries],
+                    "value": self.nazwa,
+                    "symul": self.sym_ul,
+                    "typ": "ulic",
                 }
-            }
+            },
         )
 
 
 def _wmrodz_binary(version: datetime.date) -> bytes:
-    __log = logging.getLogger(__name__ + '._wmrodz_binary')
+    __log = logging.getLogger(__name__ + "._wmrodz_binary")
     __log.info("Downloading WMRODZ dictionary")
     with contextlib.closing(requests.Session()) as session:
         dane = _get_teryt_client(session).service.PobierzKatalogWMRODZ(version)
     __log.info("Downloading WMRODZ dictionary - done")
-    return _zip_read(base64.decodebytes(dane.plik_zawartosc.encode('utf-8')))
+    return _zip_read(base64.decodebytes(dane.plik_zawartosc.encode("utf-8")))
 
 
 def __wmrodz_create():
-    __log = logging.getLogger(__name__ + '._wmrodz_create')
+    __log = logging.getLogger(__name__ + "._wmrodz_create")
     version = TerytCache().current_cache_version()
     data = _wmrodz_binary(_int_to_datetime(version))
     cache = get_cache_manager().create_cache(TERYT_WMRODZ_DB)
@@ -809,24 +899,30 @@ def lxml_iter_cleaner(itr):
 
 # noinspection PyAbstractClass
 class BaseTerytCache(VersionedCache[T]):
-    __log = logging.getLogger(__name__ + '.BaseTerytCache')
+    __log = logging.getLogger(__name__ + ".BaseTerytCache")
     change_handlers = dict()
 
     @staticmethod
     def convert_binary_data(data) -> tempfile.NamedTemporaryFile:
         file_handle = tempfile.NamedTemporaryFile("w+b", prefix="osm_teryt_temp")
-        file_handle.write(_zip_read(base64.decodebytes(data.plik_zawartosc.encode('utf-8'))))
+        file_handle.write(
+            _zip_read(base64.decodebytes(data.plik_zawartosc.encode("utf-8")))
+        )
         file_handle.flush()
         atexit.register(file_handle.close)
         return file_handle
 
     @staticmethod
-    def _data_to_dict(data_path: pathlib.Path, cls: typing.Type[T]) -> typing.Dict[str, T]:
+    def _data_to_dict(
+        data_path: pathlib.Path, cls: typing.Type[T]
+    ) -> typing.Dict[str, T]:
         # noinspection PyCallingNonCallable
         return dict(
-            (x.cache_key, x) for x in (
-                cls(_row_as_dict(x)) for (_, x) in lxml_iter_cleaner(
-                    lxml.etree.iterparse(data_path, events=('end',), tag='row')
+            (x.cache_key, x)
+            for x in (
+                cls(_row_as_dict(x))
+                for (_, x) in lxml_iter_cleaner(
+                    lxml.etree.iterparse(data_path, events=("end",), tag="row")
                 )
             )
         )
@@ -838,18 +934,21 @@ class BaseTerytCache(VersionedCache[T]):
         try:
             with self._get_updates(from_version, target_version) as data_file:
                 for event, zmiana in tqdm.tqdm(
-                        lxml_iter_cleaner(
-                            lxml.etree.iterparse(
-                                data_file.name, events=('end',), tag='zmiana')
-                        ),
-                        desc="Processing changes"
+                    lxml_iter_cleaner(
+                        lxml.etree.iterparse(
+                            data_file.name, events=("end",), tag="zmiana"
+                        )
+                    ),
+                    desc="Processing changes",
                 ):
-                    operation = zmiana.find('TypKorekty').text
+                    operation = zmiana.find("TypKorekty").text
                     handler = self.change_handlers.get(operation)
                     if not handler:
-                        raise ValueError("Unkown TypKorekty: %s, expected one of: %s.",
-                                         operation,
-                                         ", ".join(self.change_handlers.keys()))
+                        raise ValueError(
+                            "Unkown TypKorekty: %s, expected one of: %s.",
+                            operation,
+                            ", ".join(self.change_handlers.keys()),
+                        )
                     handler(self, cache, zmiana)
 
                 self.mark_ready(target_version)
@@ -857,32 +956,41 @@ class BaseTerytCache(VersionedCache[T]):
             # if there is exception updating the cache - create it from scratch
             self.create_cache()
 
-    def _get_updates(self, from_version: Version, target_version: Version) -> pathlib.Path:
+    def _get_updates(
+        self, from_version: Version, target_version: Version
+    ) -> pathlib.Path:
         raise NotImplementedError
 
 
 class SimcCache(BaseTerytCache[SimcEntry]):
-    __log = logging.getLogger(__name__ + '.SimcCache')
+    __log = logging.getLogger(__name__ + ".SimcCache")
 
     def __init__(self):
         super(SimcCache, self).__init__(TERYT_SIMC_DB)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, SimcEntry]:
         self.__log.info("Downloading SIMC version: %s", _int_to_datetime(version))
-        with contextlib.closing(requests.Session()) as session, \
-                self.convert_binary_data(
-                    _get_teryt_client(session).service.PobierzKatalogSIMC(_int_to_datetime(version))
-                ) as data_file:
+        with contextlib.closing(
+            requests.Session()
+        ) as session, self.convert_binary_data(
+            _get_teryt_client(session).service.PobierzKatalogSIMC(
+                _int_to_datetime(version)
+            )
+        ) as data_file:
             return self._data_to_dict(data_file.name, SimcEntry)
 
-    def _get_updates(self, from_version: Version, target_version: Version) -> tempfile.NamedTemporaryFile:
-        self.__log.info("Downloading SIMC updates from %s to %s", _int_to_datetime(from_version),
-                        _int_to_datetime(target_version))
+    def _get_updates(
+        self, from_version: Version, target_version: Version
+    ) -> tempfile.NamedTemporaryFile:
+        self.__log.info(
+            "Downloading SIMC updates from %s to %s",
+            _int_to_datetime(from_version),
+            _int_to_datetime(target_version),
+        )
         with contextlib.closing(requests.Session()) as session:
             return self.convert_binary_data(
                 _get_teryt_client(session).service.PobierzZmianySimcUrzedowy(
-                    _int_to_datetime(from_version),
-                    _int_to_datetime(target_version)
+                    _int_to_datetime(from_version), _int_to_datetime(target_version)
                 )
             )
 
@@ -892,7 +1000,9 @@ class SimcCache(BaseTerytCache[SimcEntry]):
     def current_cache_version(self) -> Version:
         self.__log.info("Checking current SIMC cache version")
         with contextlib.closing(requests.Session()) as session:
-            return _date_to_int(_get_teryt_client(session).service.PobierzDateAktualnegoKatSimc())
+            return _date_to_int(
+                _get_teryt_client(session).service.PobierzDateAktualnegoKatSimc()
+            )
 
     def _handle_d(self, cache: Cache[SimcEntry], obj: Element):
         """
@@ -902,8 +1012,10 @@ class SimcCache(BaseTerytCache[SimcEntry]):
         :param obj:
         :return:
         """
-        self.__log.debug("handle_d object: %s", tostring(obj, 'utf-8').decode('utf-8'))
-        new = SimcEntry.from_update_dict(update_record_to_dict(obj, 'Po', ('Identyfikator',)))
+        self.__log.debug("handle_d object: %s", tostring(obj, "utf-8").decode("utf-8"))
+        new = SimcEntry.from_update_dict(
+            update_record_to_dict(obj, "Po", ("Identyfikator",))
+        )
 
         cache.add(new.sym, new)
 
@@ -912,8 +1024,10 @@ class SimcCache(BaseTerytCache[SimcEntry]):
         U - usunięcie istniejącej miejscowości
             - wypełnione wszystkie pola "przed modyfikacją"
         """
-        self.__log.debug("handle_u object: %s", tostring(obj, 'utf-8').decode('utf-8'))
-        old = SimcEntry.from_update_dict(update_record_to_dict(obj, 'Przed', ('Identyfikator',)))
+        self.__log.debug("handle_u object: %s", tostring(obj, "utf-8").decode("utf-8"))
+        old = SimcEntry.from_update_dict(
+            update_record_to_dict(obj, "Przed", ("Identyfikator",))
+        )
         cache.delete(old.sym)
 
     def _handle_z(self, cache: Cache[SimcEntry], obj: Element):
@@ -924,12 +1038,16 @@ class SimcCache(BaseTerytCache[SimcEntry]):
         :param obj:
         :return:
         """
-        self.__log.debug("handle_z object: %s", tostring(obj, 'utf-8').decode('utf-8'))
-        old = SimcEntry.from_update_dict(update_record_to_dict(obj, 'Przed', ('Identyfikator',)))
+        self.__log.debug("handle_z object: %s", tostring(obj, "utf-8").decode("utf-8"))
+        old = SimcEntry.from_update_dict(
+            update_record_to_dict(obj, "Przed", ("Identyfikator",))
+        )
 
         cache_entry = cache.get(old.sym)
         if cache_entry:
-            cache_entry.update_from(update_record_to_dict(obj, 'Po', ('Identyfikator',)))
+            cache_entry.update_from(
+                update_record_to_dict(obj, "Po", ("Identyfikator",))
+            )
             if old.sym != cache_entry.sym:
                 cache.delete(old.sym)
             cache.add(cache_entry.sym, cache_entry)
@@ -949,12 +1067,7 @@ class SimcCache(BaseTerytCache[SimcEntry]):
         """
         self._handle_z(cache, obj)
 
-    change_handlers = {
-        'D': _handle_d,
-        'U': _handle_u,
-        'Z': _handle_z,
-        'P': _handle_p,
-    }
+    change_handlers = {"D": _handle_d, "U": _handle_u, "Z": _handle_z, "P": _handle_p}
 
 
 @functools.lru_cache(maxsize=1)
@@ -963,27 +1076,34 @@ def simc() -> Cache[SimcEntry]:
 
 
 class TerytCache(BaseTerytCache[TercEntry]):
-    __log = logging.getLogger(__name__ + '.TerytCache')
+    __log = logging.getLogger(__name__ + ".TerytCache")
 
     def __init__(self):
         super(TerytCache, self).__init__(TERYT_TERYT_DB)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, TercEntry]:
         self.__log.info("Downloading TERC version: %s", _int_to_datetime(version))
-        with contextlib.closing(requests.Session()) as session, \
-                self.convert_binary_data(
-                    _get_teryt_client(session).service.PobierzKatalogTERC(_int_to_datetime(version))
-                ) as data_file:
+        with contextlib.closing(
+            requests.Session()
+        ) as session, self.convert_binary_data(
+            _get_teryt_client(session).service.PobierzKatalogTERC(
+                _int_to_datetime(version)
+            )
+        ) as data_file:
             return self._data_to_dict(data_file.name, TercEntry)
 
-    def _get_updates(self, from_version: Version, target_version: Version) -> tempfile.NamedTemporaryFile:
-        self.__log.info("Downloading TERC updates from %s to %s", _int_to_datetime(from_version),
-                        _int_to_datetime(target_version))
+    def _get_updates(
+        self, from_version: Version, target_version: Version
+    ) -> tempfile.NamedTemporaryFile:
+        self.__log.info(
+            "Downloading TERC updates from %s to %s",
+            _int_to_datetime(from_version),
+            _int_to_datetime(target_version),
+        )
         with contextlib.closing(requests.Session()) as session:
             return self.convert_binary_data(
                 _get_teryt_client(session).service.PobierzZmianyTercUrzedowy(
-                    _int_to_datetime(from_version),
-                    _int_to_datetime(target_version)
+                    _int_to_datetime(from_version), _int_to_datetime(target_version)
                 )
             )
 
@@ -993,7 +1113,9 @@ class TerytCache(BaseTerytCache[TercEntry]):
     def current_cache_version(self) -> Version:
         self.__log.info("Checking current TERC cache version")
         with contextlib.closing(requests.Session()) as session:
-            return _date_to_int(_get_teryt_client(session).service.PobierzDateAktualnegoKatTerc())
+            return _date_to_int(
+                _get_teryt_client(session).service.PobierzDateAktualnegoKatTerc()
+            )
 
     def _handle_d(self, cache: Cache[TercEntry], obj: Element):
         """
@@ -1003,8 +1125,8 @@ class TerytCache(BaseTerytCache[TercEntry]):
         :param obj:
         :return:
         """
-        self.__log.debug("handle_d object: %s", tostring(obj, 'utf-8').decode('utf-8'))
-        new = TercEntry.from_update_dict(update_record_to_dict(obj, 'Po'))
+        self.__log.debug("handle_d object: %s", tostring(obj, "utf-8").decode("utf-8"))
+        new = TercEntry.from_update_dict(update_record_to_dict(obj, "Po"))
         cache.add(new.terc, new)
 
     def _handle_u(self, cache: Cache[TercEntry], obj: Element):
@@ -1012,8 +1134,8 @@ class TerytCache(BaseTerytCache[TercEntry]):
         U - usunięcie istniejącej jednostki i dołączenie do innej
             - wypełnione wszystkie pola "przed modyfikacją"
         """
-        self.__log.debug("handle_u object: %s", tostring(obj, 'utf-8').decode('utf-8'))
-        old = TercEntry.from_update_dict(update_record_to_dict(obj, 'Przed'))
+        self.__log.debug("handle_u object: %s", tostring(obj, "utf-8").decode("utf-8"))
+        old = TercEntry.from_update_dict(update_record_to_dict(obj, "Przed"))
         cache.delete(old.terc)
 
     def _handle_m(self, cache: Cache[TercEntry], obj: Element):
@@ -1024,12 +1146,12 @@ class TerytCache(BaseTerytCache[TercEntry]):
         :param obj:
         :return:
         """
-        self.__log.debug("handle_m object: %s", tostring(obj, 'utf-8').decode('utf-8'))
-        old = TercEntry.from_update_dict(update_record_to_dict(obj, 'Przed'))
+        self.__log.debug("handle_m object: %s", tostring(obj, "utf-8").decode("utf-8"))
+        old = TercEntry.from_update_dict(update_record_to_dict(obj, "Przed"))
 
         cache_entry = cache.get(old.terc)
         if cache_entry:
-            cache_entry.update_from(update_record_to_dict(obj, 'Po'))
+            cache_entry.update_from(update_record_to_dict(obj, "Po"))
             if old.terc != cache_entry.terc:
                 cache.delete(old.terc)
             cache.add(cache_entry.terc, cache_entry)
@@ -1038,11 +1160,7 @@ class TerytCache(BaseTerytCache[TercEntry]):
             # raise ValueError("Modification of non-existing record: {}".format(str(old)))
             pass
 
-    change_handlers = {
-        'D': _handle_d,
-        'U': _handle_u,
-        'M': _handle_m,
-    }
+    change_handlers = {"D": _handle_d, "U": _handle_u, "M": _handle_m}
 
 
 @functools.lru_cache(maxsize=1)
@@ -1051,33 +1169,46 @@ def teryt() -> Cache[TercEntry]:
 
 
 class UlicCache(BaseTerytCache[UlicMultiEntry]):
-    __log = logging.getLogger(__name__ + '.UlicCache')
+    __log = logging.getLogger(__name__ + ".UlicCache")
 
     def __init__(self):
         super(UlicCache, self).__init__(TERYT_ULIC_DB)
 
     def _get_cache_data(self, version: Version) -> typing.Dict[str, UlicMultiEntry]:
         self.__log.info("Downloading SIMC version %s", _int_to_datetime(version))
-        with contextlib.closing(requests.Session()) as session, \
-                self.convert_binary_data(
-                    _get_teryt_client(session).service.PobierzKatalogULIC(_int_to_datetime(version))
-                ) as file_path:
+        with contextlib.closing(
+            requests.Session()
+        ) as session, self.convert_binary_data(
+            _get_teryt_client(session).service.PobierzKatalogULIC(
+                _int_to_datetime(version)
+            )
+        ) as file_path:
             grouped = groupby(
-                (UlicEntry(_row_as_dict(x)) for (_, x) in
-                 lxml_iter_cleaner(lxml.etree.iterparse(file_path.name, events=('end',), tag='row'))),
-                lambda x: x.sym_ul
+                (
+                    UlicEntry(_row_as_dict(x))
+                    for (_, x) in lxml_iter_cleaner(
+                        lxml.etree.iterparse(file_path.name, events=("end",), tag="row")
+                    )
+                ),
+                lambda x: x.sym_ul,
             )
 
-            return dict((key, UlicMultiEntry.from_list(value)) for key, value in grouped.items())
+            return dict(
+                (key, UlicMultiEntry.from_list(value)) for key, value in grouped.items()
+            )
 
-    def _get_updates(self, from_version: Version, target_version: Version) -> tempfile.NamedTemporaryFile:
-        self.__log.info("Downloading SIMC updates from %s to %s", _int_to_datetime(from_version),
-                        _int_to_datetime(target_version))
+    def _get_updates(
+        self, from_version: Version, target_version: Version
+    ) -> tempfile.NamedTemporaryFile:
+        self.__log.info(
+            "Downloading SIMC updates from %s to %s",
+            _int_to_datetime(from_version),
+            _int_to_datetime(target_version),
+        )
         with contextlib.closing(requests.Session()) as session:
             return self.convert_binary_data(
                 _get_teryt_client(session).service.PobierzZmianyUlicUrzedowy(
-                    _int_to_datetime(from_version),
-                    _int_to_datetime(target_version)
+                    _int_to_datetime(from_version), _int_to_datetime(target_version)
                 )
             )
 
@@ -1087,7 +1218,9 @@ class UlicCache(BaseTerytCache[UlicMultiEntry]):
     def current_cache_version(self) -> Version:
         self.__log.info("Checking current ULIC cache version")
         with contextlib.closing(requests.Session()) as session:
-            return _date_to_int(_get_teryt_client(session).service.PobierzDateAktualnegoKatUlic())
+            return _date_to_int(
+                _get_teryt_client(session).service.PobierzDateAktualnegoKatUlic()
+            )
 
     def _handle_d(self, cache: Cache[UlicMultiEntry], obj: Element):
         """
@@ -1099,9 +1232,12 @@ class UlicCache(BaseTerytCache[UlicMultiEntry]):
         :param obj:
         :return:
         """
-        self.__log.debug("UlicCache.handle_d: Processing element: %s", tostring(obj, 'utf-8').decode('utf-8'))
+        self.__log.debug(
+            "UlicCache.handle_d: Processing element: %s",
+            tostring(obj, "utf-8").decode("utf-8"),
+        )
 
-        to = UlicEntry.from_update(update_record_to_dict(obj, 'Po'))
+        to = UlicEntry.from_update(update_record_to_dict(obj, "Po"))
         cache_entry = cache.get(to.sym_ul)
         if cache_entry:
             cache_entry.add_entry(to)
@@ -1118,8 +1254,11 @@ class UlicCache(BaseTerytCache[UlicMultiEntry]):
         :param obj:
         :return:
         """
-        self.__log.debug("UlicCache.handle_m: Processing element: %s", tostring(obj, 'utf-8').decode('utf-8'))
-        old = UlicEntry.from_update(update_record_to_dict(obj, 'Przed'))
+        self.__log.debug(
+            "UlicCache.handle_m: Processing element: %s",
+            tostring(obj, "utf-8").decode("utf-8"),
+        )
+        old = UlicEntry.from_update(update_record_to_dict(obj, "Przed"))
         self.__log.debug("Old object: %s", old)
         if old.sym_ul:
             cache_entry = cache.get(old.sym_ul)
@@ -1128,7 +1267,7 @@ class UlicCache(BaseTerytCache[UlicMultiEntry]):
         if cache_entry:
             self.__log.debug("Cache entry: %s", cache_entry)
             ulic_entry = cache_entry.get_by_sym(old.sym)
-            ulic_entry.update_from(update_record_to_dict(obj, 'Po'))
+            ulic_entry.update_from(update_record_to_dict(obj, "Po"))
             self.__log.debug(old)
             self.__log.debug(ulic_entry)
 
@@ -1167,8 +1306,11 @@ class UlicCache(BaseTerytCache[UlicMultiEntry]):
         :param obj:
         :return:
         """
-        self.__log.debug("UlicCache.handle_u: Processing element: %s", tostring(obj, 'utf-8').decode('utf-8'))
-        old = UlicEntry.from_update(update_record_to_dict(obj, 'Przed'))
+        self.__log.debug(
+            "UlicCache.handle_u: Processing element: %s",
+            tostring(obj, "utf-8").decode("utf-8"),
+        )
+        old = UlicEntry.from_update(update_record_to_dict(obj, "Przed"))
         cache_entry = cache.get(old.sym_ul)
         cache_entry.remove_by_sym(old.sym)
         if len(cache_entry) == 0:
@@ -1177,10 +1319,13 @@ class UlicCache(BaseTerytCache[UlicMultiEntry]):
             cache.add(cache_entry.sym_ul, cache_entry)
 
     def _handle_z(self, cache: Cache[UlicMultiEntry], obj: Element):
-        self.__log.debug("UlicCache.handle_z: Processing element: %s", tostring(obj, 'utf-8').decode('utf-8'))
-        old = UlicEntry.from_update(update_record_to_dict(obj, 'Przed'))
+        self.__log.debug(
+            "UlicCache.handle_z: Processing element: %s",
+            tostring(obj, "utf-8").decode("utf-8"),
+        )
+        old = UlicEntry.from_update(update_record_to_dict(obj, "Przed"))
         cache_entry = cache.get(old.sym_ul)
-        new_dict = update_record_to_dict(obj, 'Po')
+        new_dict = update_record_to_dict(obj, "Po")
         ulic_entry = None
         for ulic_entry in cache_entry.get_all():
             ulic_entry.update_from(new_dict)
@@ -1193,12 +1338,7 @@ class UlicCache(BaseTerytCache[UlicMultiEntry]):
         else:
             raise KeyError("No ulic entries for symul: " + old.sym_ul)
 
-    change_handlers = {
-        'D': _handle_d,
-        'M': _handle_m,
-        'U': _handle_u,
-        'Z': _handle_z,
-    }
+    change_handlers = {"D": _handle_d, "M": _handle_m, "U": _handle_u, "Z": _handle_z}
 
 
 @functools.lru_cache(maxsize=1)
