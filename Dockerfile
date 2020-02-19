@@ -7,7 +7,6 @@ RUN apt-get -y update && \
         gcc \
         libgdal20 \
         libgdal-dev \
-        libgeos-3.5.1 \
         libgeos-c1v5 \
         libgeos-dev \
     && \
