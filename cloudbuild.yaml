@@ -19,9 +19,10 @@ steps:
     args: ['push', '${_IMAGE_NAME}']
 
   - name: 'gcr.io/cloud-builders/gcloud'
-    args: ['beta', 'run', 'deploy', 'osm-borders',
+    args: ['run', 'deploy', 'osm-borders',
            '--image=${_IMAGE_NAME}',
-           '--region=us-central1',
+           '--region=europe-north1',
+           '--platform=managed',
            '--memory=512Mi',
            '--allow-unauthenticated',
            '--set-env-vars=DISABLE_UPDATE=True'
