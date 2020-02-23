@@ -131,8 +131,8 @@ def get_prg_filename() -> typing.Tuple[str, int]:
         "dane-z-panstwowego-rejestru-granic-i-powierzchni-jednostek-podzialow-terytorialnych-kraju-prg"
     )
     soup = bs4.BeautifulSoup(resp.text, "html.parser")
-    link = soup.find("a", text="*PRG – jednostki administracyjne")
-    version = link.parent.parent.parent.parent.find_all("td")[-1].text
+    link = soup.find("a", text="PRG – jednostki administracyjne*")
+    version = link.parent.parent.parent.parent.find_all("td")[-1].text.strip()
     return link.get("href"), calendar.timegm(time.strptime(version, "%d-%m-%Y"))
 
 
