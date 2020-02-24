@@ -25,6 +25,7 @@ steps:
            '--platform=managed',
            '--memory=512Mi',
            '--allow-unauthenticated',
+           '--max-instances=2',
            '--set-env-vars=DISABLE_UPDATE=True'
     ]
 
