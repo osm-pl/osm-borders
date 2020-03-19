@@ -188,7 +188,7 @@ def process_layer(layer_name: str, key: str, filepath: str) -> typing.Dict[str, 
         dir_name = "/" + dir_names.pop() + "/" if len(dir_names) > 0 else "/"
         __log.info("Converting PRG data")
         with fiona.open(
-            "zip://" + filepath, layer=layer_name, mode="r", encoding="utf-8"
+            "zip://" + filepath + dir_name, layer=layer_name, mode="r", encoding="utf-8"
         ) as data:
             transform = get_transformer(data.crs, "epsg:4326")
             rv = dict(
